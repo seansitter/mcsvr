@@ -1,6 +1,6 @@
 package net.seansitter.mcsvr.domain.command;
 
-public class StoreCommand implements ApiCommand, WriteCommand {
+public class StoreCommand implements ApiCommand, NoReplyCommand {
     private final String name;
     private final String key;
     private final byte[] payload;
@@ -50,6 +50,7 @@ public class StoreCommand implements ApiCommand, WriteCommand {
         return casUnique;
     }
 
+    @Override
     public boolean isNoReply() {
         return isNoReply;
     }

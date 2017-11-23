@@ -1,6 +1,6 @@
 package net.seansitter.mcsvr.domain.command;
 
-public class DeleteCommand implements ApiCommand, WriteCommand {
+public class DeleteCommand implements ApiCommand, NoReplyCommand {
     public static final String name = "delete";
 
     private final String key;
@@ -20,6 +20,7 @@ public class DeleteCommand implements ApiCommand, WriteCommand {
         return key;
     }
 
+    @Override
     public boolean isNoReply() {
         return isNoReply;
     }

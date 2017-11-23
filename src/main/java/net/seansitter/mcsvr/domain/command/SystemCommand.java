@@ -1,3 +1,3 @@
 package net.seansitter.mcsvr.domain.command;
 
-public interface SystemCommand extends Command, WriteCommand { }
+public interface SystemCommand extends Command { }

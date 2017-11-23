@@ -3,6 +3,7 @@ package net.seansitter.mcsvr;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.SimpleChannelInboundHandler;
 import net.seansitter.mcsvr.domain.command.ApiCommand;
+import net.seansitter.mcsvr.domain.command.NoReplyCommand;
 import net.seansitter.mcsvr.domain.result.CacheResult;
 import net.seansitter.mcsvr.domain.command.StoreCommand;
 
@@ -24,7 +25,7 @@ public class CommandHandler extends SimpleChannelInboundHandler<ApiCommand> {
         // ctx can accept write in different thread
         executorService.execute(() -> {
             CacheResult result = commandExecutor.execute(command);
-            if (command instanceof StoreCommand && ((StoreCommand) command).isNoReply()) {
+            if (command instanceof NoReplyCommand && ((NoReplyCommand)command).isNoReply()) {
                 ctx.flush();
             }
             else {
