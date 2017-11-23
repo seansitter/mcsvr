@@ -27,10 +27,12 @@ public class CommandHandler extends SimpleChannelInboundHandler<ApiCommand> {
         // of this class, but THE MOST IMPORTANT THING is that for a given client, all operations are ordered for the
         // client connection. It would certainly be more efficient to have a thread pool which would cache threads
         // and where we could obtain a lease on a thread for the duration of a request. That way we would not be spinning
-        // up and tearing down the machinery of threadpool / thread creation on every request. If I had all the time...
+        // up and tearing down the machinery of threadpool executor & the penalty of thread creation on every request.
+        // If I had all the time...
         //
-        // For the purposes of this exercise, the executor provides a nice interface + built in queueing.
+        // For the purposes of this exercise, the executor provides a nice interface + built in on a single thread queueing.
         this.executorService = Executors.newSingleThreadExecutor();
+
         this.commandExecutor = commandExecutor;
     }
 
