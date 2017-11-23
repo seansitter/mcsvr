@@ -31,4 +31,19 @@ public class ResponseStatus {
             return status;
         }
     }
+
+    public enum ErrorStatus {
+        ERROR("ERROR"),
+        CLIENT_ERROR("CLIENT_ERROR"),
+        SERVER_ERROR("SERVER_ERROR");
+
+        private String status;
+        ErrorStatus(String status) {
+            this.status = status;
+        }
+
+        public String toString() {
+            return status;
+        }
+    }
 }

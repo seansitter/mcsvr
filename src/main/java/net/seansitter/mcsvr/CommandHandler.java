@@ -36,6 +36,7 @@ public class CommandHandler extends SimpleChannelInboundHandler<ApiCommand> {
 
     @Override
     protected void channelRead0(ChannelHandlerContext ctx, ApiCommand command) throws Exception {
+        // critically important to not block the netty thread, so we execute cache operation in a separate thread
         // ctx can accept write in different thread
         executorService.execute(() -> {
             CacheResult result = commandExecutor.execute(command);
