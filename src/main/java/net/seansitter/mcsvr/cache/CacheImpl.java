@@ -20,7 +20,10 @@ public class CacheImpl implements Cache {
     public CacheImpl(CacheEventListener eventListener) {
         this.cache = new HashMap<>();
         this.casCounter = new AtomicLong(0);
-        this.readWriteLock = new ReentrantReadWriteLock(false); // unfair lock is much faster, slight order penalty
+        // unfair lock is much faster, slight order penalty
+        // the system makes no guarantees about the order of operations from unique connections relative to each other
+        // rather, operations from a single connection should be totally ordered
+        this.readWriteLock = new ReentrantReadWriteLock(false);
         this.eventListener = (eventListener == null) ? new DummyCacheEventListener() : eventListener;
     }
 

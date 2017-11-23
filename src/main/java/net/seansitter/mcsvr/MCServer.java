@@ -34,7 +34,6 @@ public class MCServer {
     public void start() throws Exception {
         Cache cache = new CacheImpl();
 
-        ExecutorService execSvc = Executors.newCachedThreadPool();
         ApiCacheCommandExecutor cmdExec = new ApiCacheCommandExecutorImpl(cache);
 
         EventLoopGroup eventLoopGroup = new NioEventLoopGroup();
@@ -48,7 +47,7 @@ public class MCServer {
                         protected void initChannel(SocketChannel ch) throws Exception {
                             ch.pipeline().addLast(new McTextDecoder());
                             ch.pipeline().addLast(new McTextEncoder());
-                            ch.pipeline().addLast(new CommandHandler(execSvc, cmdExec));
+                            ch.pipeline().addLast(new CommandHandler(cmdExec));
                         }
                     });
             ChannelFuture bindFuture = bootstrap.bind().sync();
