@@ -4,12 +4,17 @@ import io.netty.buffer.ByteBuf;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.handler.codec.ByteToMessageDecoder;
 import io.netty.handler.codec.DecoderException;
-import net.seansitter.mcsvr.domain.*;
+import net.seansitter.mcsvr.domain.command.ApiCommand;
+import net.seansitter.mcsvr.domain.command.DeleteCommand;
+import net.seansitter.mcsvr.domain.command.GetCommand;
+import net.seansitter.mcsvr.domain.command.StoreCommand;
 
 import java.nio.charset.Charset;
-import java.util.Arrays;
 import java.util.List;
 
+/**
+ * This class implements the decoder for the memcache text protocol
+ */
 public class McTextDecoder extends ByteToMessageDecoder {
     private Object[] cmdLineObjs = null;
 

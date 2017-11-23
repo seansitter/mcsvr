@@ -1,4 +1,4 @@
-package net.seansitter.mcsvr.domain;
+package net.seansitter.mcsvr.domain.result;
 
 import net.seansitter.mcsvr.cache.CacheEntry;
 
