@@ -1,4 +1,4 @@
-package net.seansitter.mcsvr.domain;
+package net.seansitter.mcsvr.domain.command;
 
 import java.util.Collections;
 import java.util.LinkedList;

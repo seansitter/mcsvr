@@ -1,4 +1,4 @@
-package net.seansitter.mcsvr.domain;
+package net.seansitter.mcsvr.domain.command;
 
 public class StoreCommand implements ApiCommand, WriteCommand {
     private final String name;

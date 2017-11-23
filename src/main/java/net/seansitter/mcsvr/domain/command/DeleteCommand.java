@@ -1,4 +1,4 @@
-package net.seansitter.mcsvr.domain;
+package net.seansitter.mcsvr.domain.command;
 
 public class DeleteCommand implements ApiCommand, WriteCommand {
     public static final String name = "delete";

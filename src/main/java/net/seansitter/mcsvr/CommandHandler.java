@@ -2,9 +2,9 @@ package net.seansitter.mcsvr;
 
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.SimpleChannelInboundHandler;
-import net.seansitter.mcsvr.domain.ApiCommand;
-import net.seansitter.mcsvr.domain.CacheResult;
-import net.seansitter.mcsvr.domain.StoreCommand;
+import net.seansitter.mcsvr.domain.command.ApiCommand;
+import net.seansitter.mcsvr.domain.result.CacheResult;
+import net.seansitter.mcsvr.domain.command.StoreCommand;
 
 import java.util.concurrent.ExecutorService;
 
