@@ -45,6 +45,7 @@ public class MCServer {
                             ch.pipeline().addLast(new McTextDecoder());
                             ch.pipeline().addLast(new McTextEncoder());
                             ch.pipeline().addLast(new CommandHandler(cmdExec));
+                            ch.pipeline().addLast(new InBoundExceptionHandler());
                         }
                     });
             ChannelFuture bindFuture = bootstrap.bind().sync();
