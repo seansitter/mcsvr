@@ -114,7 +114,7 @@ public class McTextDecoder extends ByteToMessageDecoder {
     }
 
     private Object[] toStoreArr(String[] arr) {
-        Object[] ret = new Object[7];
+        Object[] ret = new Object[6];
         ret[0] = arr[0];
         ret[1] = arr[1];
         ret[2] = new Integer(Integer.parseUnsignedInt(arr[2])); // flags

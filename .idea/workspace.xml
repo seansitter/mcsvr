@@ -2,31 +2,7 @@
 <project version="4">
   <component name="ChangeListManager">
     <list default="true" id="ce3728d3-f0d0-44ec-9e14-811c4d80b955" name="Default" comment="">
-      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/.idea/vcs.xml" />
-      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/src/main/java/net/seansitter/mcsvr/domain/GetCacheResult.java" />
-      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/src/main/java/net/seansitter/mcsvr/domain/StatusCacheResult.java" />
-      <change type="DELETED" beforePath="$PROJECT_DIR$/out/production/classes/net/seansitter/mcsvr/domain/GetsCommand$1.class" afterPath="" />
-      <change type="DELETED" beforePath="$PROJECT_DIR$/out/production/classes/net/seansitter/mcsvr/domain/GetsCommand$GetsCommandBuilder.class" afterPath="" />
-      <change type="DELETED" beforePath="$PROJECT_DIR$/out/production/classes/net/seansitter/mcsvr/domain/GetsCommand.class" afterPath="" />
-      <change type="MOVED" beforePath="$PROJECT_DIR$/src/main/java/net/seansitter/mcsvr/domain/GetsCommand.java" afterPath="$PROJECT_DIR$/src/main/java/net/seansitter/mcsvr/domain/GetCommand.java" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/out/production/classes/net/seansitter/mcsvr/ApiCacheCommandExecutorImpl.class" afterPath="$PROJECT_DIR$/out/production/classes/net/seansitter/mcsvr/ApiCacheCommandExecutorImpl.class" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/out/production/classes/net/seansitter/mcsvr/cache/Cache.class" afterPath="$PROJECT_DIR$/out/production/classes/net/seansitter/mcsvr/cache/Cache.class" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/out/production/classes/net/seansitter/mcsvr/cache/CacheImpl.class" afterPath="$PROJECT_DIR$/out/production/classes/net/seansitter/mcsvr/cache/CacheImpl.class" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/out/production/classes/net/seansitter/mcsvr/codec/McTextDecoder.class" afterPath="$PROJECT_DIR$/out/production/classes/net/seansitter/mcsvr/codec/McTextDecoder.class" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/out/production/classes/net/seansitter/mcsvr/codec/McTextEncoder.class" afterPath="$PROJECT_DIR$/out/production/classes/net/seansitter/mcsvr/codec/McTextEncoder.class" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/out/production/classes/net/seansitter/mcsvr/domain/GetCommand.class" afterPath="$PROJECT_DIR$/out/production/classes/net/seansitter/mcsvr/domain/GetCommand.class" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/out/production/classes/net/seansitter/mcsvr/domain/GetsCacheResult.class" afterPath="$PROJECT_DIR$/out/production/classes/net/seansitter/mcsvr/domain/GetsCacheResult.class" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/.idea/workspace.xml" afterPath="$PROJECT_DIR$/.idea/workspace.xml" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/main/java/net/seansitter/mcsvr/ApiCacheCommandExecutorImpl.java" afterPath="$PROJECT_DIR$/src/main/java/net/seansitter/mcsvr/ApiCacheCommandExecutorImpl.java" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/main/java/net/seansitter/mcsvr/cache/Cache.java" afterPath="$PROJECT_DIR$/src/main/java/net/seansitter/mcsvr/cache/Cache.java" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/main/java/net/seansitter/mcsvr/cache/CacheImpl.java" afterPath="$PROJECT_DIR$/src/main/java/net/seansitter/mcsvr/cache/CacheImpl.java" />
       <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/main/java/net/seansitter/mcsvr/codec/McTextDecoder.java" afterPath="$PROJECT_DIR$/src/main/java/net/seansitter/mcsvr/codec/McTextDecoder.java" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/main/java/net/seansitter/mcsvr/codec/McTextEncoder.java" afterPath="$PROJECT_DIR$/src/main/java/net/seansitter/mcsvr/codec/McTextEncoder.java" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/main/java/net/seansitter/mcsvr/domain/CacheResult.java" afterPath="$PROJECT_DIR$/src/main/java/net/seansitter/mcsvr/domain/CacheResult.java" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/main/java/net/seansitter/mcsvr/domain/DeleteCacheResult.java" afterPath="$PROJECT_DIR$/src/main/java/net/seansitter/mcsvr/domain/DeleteCacheResult.java" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/main/java/net/seansitter/mcsvr/domain/DeleteCommand.java" afterPath="$PROJECT_DIR$/src/main/java/net/seansitter/mcsvr/domain/DeleteCommand.java" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/main/java/net/seansitter/mcsvr/domain/GetsCacheResult.java" afterPath="$PROJECT_DIR$/src/main/java/net/seansitter/mcsvr/domain/GetsCacheResult.java" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/main/java/net/seansitter/mcsvr/domain/StoreCacheResult.java" afterPath="$PROJECT_DIR$/src/main/java/net/seansitter/mcsvr/domain/StoreCacheResult.java" />
     </list>
     <ignored path="$PROJECT_DIR$/out/" />
     <ignored path="$PROJECT_DIR$/.gradle/" />
@@ -101,8 +77,8 @@
       <file leaf-file-name="CacheImpl.java" pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/src/main/java/net/seansitter/mcsvr/cache/CacheImpl.java">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="572">
-              <caret line="53" column="25" lean-forward="false" selection-start-line="53" selection-start-column="25" selection-end-line="53" selection-end-column="25" />
+            <state relative-caret-position="323">
+              <caret line="221" column="0" lean-forward="false" selection-start-line="221" selection-start-column="0" selection-end-line="221" selection-end-column="0" />
               <folding>
                 <element signature="e#1081#1082#0" expanded="true" />
                 <element signature="e#1125#1126#0" expanded="true" />
@@ -184,8 +160,8 @@
       <file leaf-file-name="McTextDecoder.java" pinned="false" current-in-tab="true">
         <entry file="file://$PROJECT_DIR$/src/main/java/net/seansitter/mcsvr/codec/McTextDecoder.java">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="-686">
-              <caret line="54" column="0" lean-forward="false" selection-start-line="54" selection-start-column="0" selection-end-line="54" selection-end-column="0" />
+            <state relative-caret-position="413">
+              <caret line="146" column="74" lean-forward="true" selection-start-line="146" selection-start-column="60" selection-end-line="146" selection-end-column="112" />
               <folding>
                 <element signature="imports" expanded="true" />
               </folding>
@@ -212,8 +188,8 @@
       <file leaf-file-name="CommandHandler.java" pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/src/main/java/net/seansitter/mcsvr/CommandHandler.java">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="285">
-              <caret line="25" column="25" lean-forward="false" selection-start-line="25" selection-start-column="25" selection-end-line="25" selection-end-column="25" />
+            <state relative-caret-position="270">
+              <caret line="24" column="0" lean-forward="false" selection-start-line="24" selection-start-column="0" selection-end-line="24" selection-end-column="0" />
               <folding />
             </state>
           </provider>
@@ -578,7 +554,6 @@
         <option value="$PROJECT_DIR$/src/main/java/net/seansitter/mcsvr/domain/GetCommand.java" />
         <option value="$PROJECT_DIR$/src/main/java/net/seansitter/mcsvr/domain/GetsCommand.java" />
         <option value="$PROJECT_DIR$/src/main/java/net/seansitter/mcsvr/domain/DeleteCommand.java" />
-        <option value="$PROJECT_DIR$/src/main/java/net/seansitter/mcsvr/codec/McTextDecoder.java" />
         <option value="$PROJECT_DIR$/src/main/java/net/seansitter/mcsvr/ApiCacheCommandExecutorImpl.java" />
         <option value="$PROJECT_DIR$/src/main/java/net/seansitter/mcsvr/domain/StatusCacheResult.java" />
         <option value="$PROJECT_DIR$/src/main/java/net/seansitter/mcsvr/cache/CacheImpl.java" />
@@ -586,6 +561,7 @@
         <option value="$PROJECT_DIR$/src/main/java/net/seansitter/mcsvr/domain/StoreCacheResult.java" />
         <option value="$PROJECT_DIR$/src/main/java/net/seansitter/mcsvr/domain/CacheResult.java" />
         <option value="$PROJECT_DIR$/src/main/java/net/seansitter/mcsvr/codec/McTextEncoder.java" />
+        <option value="$PROJECT_DIR$/src/main/java/net/seansitter/mcsvr/codec/McTextDecoder.java" />
       </list>
     </option>
   </component>
@@ -900,11 +876,17 @@
           <properties />
           <option name="timeStamp" value="69" />
         </line-breakpoint>
+        <line-breakpoint enabled="true" type="java-line">
+          <url>file://$PROJECT_DIR$/src/main/java/net/seansitter/mcsvr/codec/McTextDecoder.java</url>
+          <line>146</line>
+          <properties />
+          <option name="timeStamp" value="70" />
+        </line-breakpoint>
       </breakpoints>
       <breakpoints-dialog>
         <breakpoints-dialog />
       </breakpoints-dialog>
-      <option name="time" value="70" />
+      <option name="time" value="71" />
     </breakpoint-manager>
     <watches-manager />
   </component>
@@ -1299,23 +1281,6 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/src/main/java/net/seansitter/mcsvr/cache/CacheImpl.java">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="572">
-          <caret line="53" column="25" lean-forward="false" selection-start-line="53" selection-start-column="25" selection-end-line="53" selection-end-column="25" />
-          <folding>
-            <element signature="e#1081#1082#0" expanded="true" />
-            <element signature="e#1125#1126#0" expanded="true" />
-            <element signature="e#1161#1162#0" expanded="true" />
-            <element signature="e#1198#1199#0" expanded="true" />
-            <element signature="e#1422#1423#0" expanded="true" />
-            <element signature="e#1466#1467#0" expanded="true" />
-            <element signature="e#1520#1521#0" expanded="true" />
-            <element signature="e#1557#1558#0" expanded="true" />
-          </folding>
-        </state>
-      </provider>
-    </entry>
     <entry file="file://$PROJECT_DIR$/src/main/java/net/seansitter/mcsvr/domain/CacheResult.java">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="30">
@@ -1378,14 +1343,6 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/src/main/java/net/seansitter/mcsvr/CommandHandler.java">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="285">
-          <caret line="25" column="25" lean-forward="false" selection-start-line="25" selection-start-column="25" selection-end-line="25" selection-end-column="25" />
-          <folding />
-        </state>
-      </provider>
-    </entry>
     <entry file="file://$PROJECT_DIR$/src/main/java/net/seansitter/mcsvr/codec/McTextEncoder.java">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="313">
@@ -1400,10 +1357,35 @@
         </state>
       </provider>
     </entry>
+    <entry file="file://$PROJECT_DIR$/src/main/java/net/seansitter/mcsvr/cache/CacheImpl.java">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="323">
+          <caret line="221" column="0" lean-forward="false" selection-start-line="221" selection-start-column="0" selection-end-line="221" selection-end-column="0" />
+          <folding>
+            <element signature="e#1081#1082#0" expanded="true" />
+            <element signature="e#1125#1126#0" expanded="true" />
+            <element signature="e#1161#1162#0" expanded="true" />
+            <element signature="e#1198#1199#0" expanded="true" />
+            <element signature="e#1422#1423#0" expanded="true" />
+            <element signature="e#1466#1467#0" expanded="true" />
+            <element signature="e#1520#1521#0" expanded="true" />
+            <element signature="e#1557#1558#0" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/src/main/java/net/seansitter/mcsvr/CommandHandler.java">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="270">
+          <caret line="24" column="0" lean-forward="false" selection-start-line="24" selection-start-column="0" selection-end-line="24" selection-end-column="0" />
+          <folding />
+        </state>
+      </provider>
+    </entry>
     <entry file="file://$PROJECT_DIR$/src/main/java/net/seansitter/mcsvr/codec/McTextDecoder.java">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="-686">
-          <caret line="54" column="0" lean-forward="false" selection-start-line="54" selection-start-column="0" selection-end-line="54" selection-end-column="0" />
+        <state relative-caret-position="413">
+          <caret line="146" column="74" lean-forward="true" selection-start-line="146" selection-start-column="60" selection-end-line="146" selection-end-column="112" />
           <folding>
             <element signature="imports" expanded="true" />
           </folding>
