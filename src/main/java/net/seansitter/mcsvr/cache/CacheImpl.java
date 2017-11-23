@@ -61,21 +61,22 @@ public class CacheImpl implements Cache {
             return DeleteStatus.NOT_FOUND;
         }
 
-        // acquire write lock
+        // acquire read lock - try to pre-verify key in read
         readWriteLock.readLock().lock();
         try {
             CacheValue value = cache.get(key);
             if (null == value) {
-                return DeleteStatus.NOT_FOUND;
+                return DeleteStatus.NOT_FOUND; // no key
             }
-            readWriteLock.readLock().unlock();
-            readWriteLock.writeLock().lock();
+            readWriteLock.readLock().unlock(); // need to first release read lock since can't upgrade to write
+            readWriteLock.writeLock().lock(); //  acquire write lock
             try {
                 value = cache.get(key);
                 if (null == value) { // re-check, could have been deleted in the meantime
                     return DeleteStatus.NOT_FOUND;
                 }
 
+                cache.remove(key); // actually remove the item
                 eventListener.deleteEntry(new CacheEntry(key, value));
 
                 return DeleteStatus.DELETED;
@@ -86,7 +87,9 @@ public class CacheImpl implements Cache {
         }
         finally {
             // release write lock
-            readWriteLock.writeLock().unlock();
+            if (readWriteLock.getReadHoldCount() > 0) {
+                readWriteLock.readLock().unlock();
+            }
         }
     }
 
@@ -212,7 +215,10 @@ public class CacheImpl implements Cache {
             }
         }
         finally {
-            readWriteLock.readLock().unlock();
+            // release write lock
+            if (readWriteLock.getReadHoldCount() > 0) {
+                readWriteLock.readLock().unlock();
+            }
         }
     }
 

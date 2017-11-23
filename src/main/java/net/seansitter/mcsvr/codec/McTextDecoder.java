@@ -17,6 +17,7 @@ import java.util.List;
  */
 public class McTextDecoder extends ByteToMessageDecoder {
     private Object[] cmdLineObjs = null;
+    private static McCodecUtil codecUtil = new McCodecUtil();
 
     @Override
     public void decode(ChannelHandlerContext ctx, ByteBuf in, List<Object> out)
@@ -28,10 +29,8 @@ public class McTextDecoder extends ByteToMessageDecoder {
                 return; // we don't have a full command yet, wait for more data
             }
 
-            // if our command is not retrieval, we expect payload
-            if (((String) this.cmdLineObjs[0]).equalsIgnoreCase("get") ||
-                    ((String)cmdLineObjs[0]).equalsIgnoreCase("gets")) {
-
+            // if our command is retrieval we don't expect a payload so we're done
+            if (!codecUtil.hasPayload((String)cmdLineObjs[0])) {
                 ApiCommand cmd = cmdLineObjsToCmd(this.cmdLineObjs, null);
                 out.add(cmd);
                 reset();
