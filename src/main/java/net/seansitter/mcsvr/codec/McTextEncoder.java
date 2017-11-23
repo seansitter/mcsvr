@@ -52,7 +52,7 @@ public class McTextEncoder extends MessageToByteEncoder<CacheResult> {
 
     protected void writeGetsCacheEntry(CacheEntry cacheEntry, ByteBuf out) {
         writeCacheValue(cacheEntry, out);
-        writeString(String.format(" %d", cacheEntry.getValue().getSize()), out);
+        writeString(String.format(" %d", cacheEntry.getValue().getCasUnique()), out);
         writeCrlf(out);
         writeCachePayload(cacheEntry, out);
         writeCrlf(out);
