@@ -2,6 +2,7 @@ package net.seansitter.mcsvr;
 
 import io.netty.bootstrap.ServerBootstrap;
 import io.netty.channel.ChannelFuture;
+import io.netty.channel.ChannelInboundHandler;
 import io.netty.channel.ChannelInitializer;
 import io.netty.channel.EventLoopGroup;
 import io.netty.channel.nio.NioEventLoopGroup;
@@ -30,6 +31,12 @@ public class MCServer {
             logger.error("failed to stat server: ", e);
         }
     }
+
+    private final ChannelInboundHandler encoder;
+    private final ChannelInboundHandler decoder;
+
+    
+
 
     public void start() throws Exception {
         Cache cache = new CacheImpl();
