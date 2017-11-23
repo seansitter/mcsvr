@@ -2,10 +2,19 @@ package net.seansitter.mcsvr.domain;
 
 import net.seansitter.mcsvr.cache.CacheImpl;
 
-public class StoreCacheResult implements CacheResult {
-    final CacheImpl.StoreStatus status;
+public class StoreCacheResult implements StatusCacheResult {
+    private final CacheImpl.StoreStatus status;
 
     public StoreCacheResult(CacheImpl.StoreStatus status) {
         this.status = status;
+    }
+
+    private final CacheImpl.StoreStatus getStatus() {
+        return status;
+    }
+
+    @Override
+    public String getStatusString() {
+        return status.toString();
     }
 }

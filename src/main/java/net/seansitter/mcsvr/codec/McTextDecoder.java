@@ -77,27 +77,22 @@ public class McTextDecoder extends ByteToMessageDecoder {
             throw new DecoderException("Invalid text line");
         }
 
+        String cmd = cmdParts[0];
         // if we have a retrieval / delete command, we are done
-        if (cmdParts[0].equalsIgnoreCase("get")) {
-            if (cmdParts.length > 2) {
-                throw new DecoderException("get command expects 1 key");
+        if(cmd.equalsIgnoreCase("get") || cmd.equalsIgnoreCase("gets")) {
+            if (cmdParts.length < 2) {
+                throw new DecoderException("'"+cmd+"' command expects 1 or more key");
             }
             return cmdParts;
         }
-        else if(cmdParts[0].equalsIgnoreCase("gets")) {
+        else if(cmd.equalsIgnoreCase("delete")) {
             if (cmdParts.length < 2) {
-                throw new DecoderException("get command expects 1 key");
-            }
-            return cmdParts;
-        }
-        else if(cmdParts[0].equalsIgnoreCase("delete")) {
-            if (cmdParts.length < 2) {
-                throw new DecoderException("get command expects 1 key");
+                throw new DecoderException("'delete' command expects 1 key");
             }
             return cmdParts;
         }
         else {
-            if (cmdParts[0].equalsIgnoreCase("cas")) {
+            if (cmd.equalsIgnoreCase("cas")) {
                 return toCasArr(cmdParts);
             }
             else {
@@ -131,14 +126,22 @@ public class McTextDecoder extends ByteToMessageDecoder {
 
     private ApiCommand cmdLineObjsToCmd(Object[] cmdLineObjs, byte[] payload) {
         String cmd = (String)cmdLineObjs[0];
-        if (cmd.equalsIgnoreCase("gets")) {
-            return new GetsCommand(Arrays.asList(Arrays.copyOfRange((String[])cmdLineObjs, 1, cmdLineObjs.length)));
-        }
-        if (cmd.equalsIgnoreCase("get")) {
-            return new GetCommand((String)cmdLineObjs[1]);
+
+        if (cmd.equalsIgnoreCase("get") || cmd.equalsIgnoreCase("gets")) {
+            GetCommand.Builder b = GetCommand.newBuilder();
+                    b.withName(cmd.toLowerCase());
+            for (int i = 1; i < cmdLineObjs.length; i++) { // more efficent - avoid creating extra lists
+                b.withKey((String)cmdLineObjs[i]);
+            }
+            return b.build();
         }
         if (cmd.equalsIgnoreCase("delete")) {
-            return new DeleteCommand((String)cmdLineObjs[1]);
+            boolean isNoReply = (cmdLineObjs.length == 3 && ((String)cmdLineObjs[2]).equalsIgnoreCase("noreply"));
+
+            return DeleteCommand.newBuilder()
+                    .withKey((String)cmdLineObjs[1])
+                    .withIsNoReply(isNoReply)
+                    .build();
         }
         if (cmd.equalsIgnoreCase("set")) {
             boolean isNoReply = (cmdLineObjs.length == 6 && ((String)cmdLineObjs[5]).equalsIgnoreCase("noreply"));

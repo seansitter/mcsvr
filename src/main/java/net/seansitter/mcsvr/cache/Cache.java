@@ -9,9 +9,9 @@ public interface Cache {
     // this is not an api call
     List<CacheEntry> destroyKeys(List<String> keys);
 
-    Optional<CacheEntry> get(String key);
+    List<CacheEntry> get(List<String> keys);
 
-    List<CacheEntry> gets(List<String> keys);
+    Optional<CacheEntry> get(String keys);
 
     CacheImpl.StoreStatus cas(String key, byte[] value, long ttl, long casUnique, long flag);
 

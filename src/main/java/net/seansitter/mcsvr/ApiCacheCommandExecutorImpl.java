@@ -13,7 +13,7 @@ public class ApiCacheCommandExecutorImpl implements ApiCacheCommandExecutor {
     @Override
     public CacheResult execute(ApiCommand command) {
         if (command.getName().equals("gets")) {
-            return executeGetsCommand((GetsCommand)command);
+            return executeGetsCommand((GetCommand)command);
         }
         else if (command.getName().equals("get")) {
             return executeGetCommand((GetCommand)command);
@@ -21,18 +21,25 @@ public class ApiCacheCommandExecutorImpl implements ApiCacheCommandExecutor {
         else if (command.getName().equals("set")) {
             return executeSetCommand((StoreCommand)command);
         }
+        else if (command.getName().equals("delete")) {
+            return executeDeleteCommand((DeleteCommand)command);
+        }
         return null;
     }
 
-    private CacheResult executeGetsCommand(GetsCommand c) {
-        return new GetsCacheResult(cache.gets(c.getKeys()));
+    private CacheResult executeGetsCommand(GetCommand c) {
+        return new GetsCacheResult(cache.get(c.getKeys()));
     }
 
     private CacheResult executeGetCommand(GetCommand c) {
-        return new GetsCacheResult(cache.get(c.getKey()));
+        return new GetCacheResult(cache.get(c.getKeys()));
     }
 
     private CacheResult executeSetCommand(StoreCommand c) {
         return new StoreCacheResult(cache.set(c.getKey(), c.getPayload(), c.getExpTime(), c.getFlags()));
+    }
+
+    private CacheResult executeDeleteCommand(DeleteCommand c) {
+        return new DeleteCacheResult(cache.deleteKey(c.getKey()));
     }
 }

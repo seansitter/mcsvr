@@ -25,15 +25,34 @@ public class CacheImpl implements Cache {
     }
 
     public enum DeleteStatus {
-        DELETED,
-        NOT_FOUND
+        DELETED("DELETED"),
+        NOT_FOUND("NOT_FOUND");
+
+        private String status;
+        DeleteStatus(String status) {
+            this.status = status;
+        }
+
+        public String toString() {
+            return status;
+        }
     }
 
     public enum StoreStatus {
-        STORED,
-        NOT_STORED,
-        EXISTS,
-        NOT_FOUND
+        STORED("STORED"),
+        NOT_STORED("NOT_STORED"),
+        EXISTS("EXISTS"),
+        NOT_FOUND("NOT_FOUND");
+
+        private String status;
+        StoreStatus(String status) {
+            this.status = status;
+        }
+
+        @Override
+        public String toString() {
+            return status;
+        }
     }
 
     @Override
@@ -130,7 +149,7 @@ public class CacheImpl implements Cache {
     }
 
     @Override
-    public List<CacheEntry> gets(List<String> keys) {
+    public List<CacheEntry> get(List<String> keys) {
         if (null == keys || keys.isEmpty()) {
             return new LinkedList<>();
         }
