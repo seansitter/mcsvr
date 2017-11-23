@@ -12,11 +12,15 @@ import java.nio.charset.Charset;
 public class McTextEncoder extends MessageToByteEncoder<CacheResult> {
     @Override
     protected void encode(ChannelHandlerContext ctx, CacheResult msg, ByteBuf out) throws Exception {
-        if (msg instanceof GetCacheResult) {
-            writeGetCacheResult((GetCacheResult)msg, out);
-        }
-        else if (msg instanceof GetsCacheResult) {
+        doEncode(msg, out);
+    }
+
+    protected void doEncode(CacheResult msg, ByteBuf out) {
+        if (msg instanceof GetsCacheResult) {
             writeGetsCacheResult((GetCacheResult)msg, out);
+        }
+        else if (msg instanceof GetCacheResult) {
+            writeGetCacheResult((GetCacheResult)msg, out);
         }
         else if (msg instanceof StatusCacheResult) {
             writeStatusCacheResult((StatusCacheResult)msg, out);
