@@ -1,0 +1,170 @@
+package net.seansitter.mcsvr.codec;
+
+import io.netty.buffer.ByteBuf;
+import io.netty.channel.ChannelHandlerContext;
+import io.netty.handler.codec.ByteToMessageDecoder;
+import io.netty.handler.codec.DecoderException;
+import net.seansitter.mcsvr.domain.*;
+
+import java.nio.charset.Charset;
+import java.util.Arrays;
+import java.util.List;
+
+public class McTextDecoder extends ByteToMessageDecoder {
+    private Object[] cmdLineObjs = null;
+
+    @Override
+    public void decode(ChannelHandlerContext ctx, ByteBuf in, List<Object> out)
+            throws Exception {
+
+        if (null == cmdLineObjs) {
+            cmdLineObjs = parseCommand(in);
+            if (null == cmdLineObjs) {
+                return; // we don't have a full command yet, wait for more data
+            }
+
+            // if our command is not retrieval, we expect payload
+            if (((String) this.cmdLineObjs[0]).equalsIgnoreCase("get") ||
+                    ((String)cmdLineObjs[0]).equalsIgnoreCase("gets")) {
+
+                ApiCommand cmd = cmdLineObjsToCmd(this.cmdLineObjs, null);
+                out.add(cmd);
+                reset();
+
+                return;
+            }
+        }
+
+        int byteLen = ((Integer)cmdLineObjs[4]).intValue();
+        if (in.isReadable() && (in.readableBytes() >= byteLen + 2)) {
+            byte[] payload = new byte[byteLen];
+            in.readBytes(byteLen).getBytes(0, payload);
+            ApiCommand cmd = cmdLineObjsToCmd(cmdLineObjs, payload);
+            out.add(cmd);
+
+            in.readBytes(2); // advance past \r\n
+            reset();
+        }
+    }
+
+    private void reset() {
+        cmdLineObjs = null;
+    }
+
+    private Object[] parseCommand(ByteBuf in) {
+        int rIdx = in.readerIndex();
+        int endLnIdx = -1;
+        for (int i = rIdx; i < rIdx+in.readableBytes()-1; i++) {
+            // check current byte and lookahead to see if we are at end of text line
+            if (in.getByte(i) == '\r' && in.getByte(i+1) == '\n') {
+                // we have the text line
+                endLnIdx = i+1;
+                break;
+            }
+        }
+
+        // didn't get a full text line
+        if (endLnIdx < 0) {
+            return null;
+        }
+
+        // don't include the cr-lf
+        String cmdLine = in.readBytes((endLnIdx-1)-rIdx).toString(Charset.forName("utf-8"));
+        in.readBytes(2);
+
+        String[] cmdParts = cmdLine.split(" ");
+        if (cmdParts.length < 2) {
+            throw new DecoderException("Invalid text line");
+        }
+
+        // if we have a retrieval / delete command, we are done
+        if (cmdParts[0].equalsIgnoreCase("get")) {
+            if (cmdParts.length > 2) {
+                throw new DecoderException("get command expects 1 key");
+            }
+            return cmdParts;
+        }
+        else if(cmdParts[0].equalsIgnoreCase("gets")) {
+            if (cmdParts.length < 2) {
+                throw new DecoderException("get command expects 1 key");
+            }
+            return cmdParts;
+        }
+        else if(cmdParts[0].equalsIgnoreCase("delete")) {
+            if (cmdParts.length < 2) {
+                throw new DecoderException("get command expects 1 key");
+            }
+            return cmdParts;
+        }
+        else {
+            if (cmdParts[0].equalsIgnoreCase("cas")) {
+                return toCasArr(cmdParts);
+            }
+            else {
+                return toStoreArr(cmdParts);
+            }
+        }
+    }
+
+    private Object[] toCasArr(String[] arr) {
+        Object[] ret = new Object[7];
+        ret[0] = arr[0];
+        ret[1] = arr[1];
+        ret[2] = new Integer(Integer.parseUnsignedInt(arr[2])); // flags
+        ret[3] = new Long(Long.parseUnsignedLong(arr[3])); // exptime
+        ret[4] = new Integer(Integer.parseUnsignedInt(arr[4])); // bytes
+        ret[5] = new Long(Long.parseUnsignedLong(arr[5])); // cas
+        ret[6] = arr[6];
+        return ret;
+    }
+
+    private Object[] toStoreArr(String[] arr) {
+        Object[] ret = new Object[7];
+        ret[0] = arr[0];
+        ret[1] = arr[1];
+        ret[2] = new Integer(Integer.parseUnsignedInt(arr[2])); // flags
+        ret[3] = new Long(Long.parseUnsignedLong(arr[3])); // exptime
+        ret[4] = new Integer(Integer.parseUnsignedInt(arr[4])); // bytes
+        ret[5] = arr[5];
+        return ret;
+    }
+
+    private ApiCommand cmdLineObjsToCmd(Object[] cmdLineObjs, byte[] payload) {
+        String cmd = (String)cmdLineObjs[0];
+        if (cmd.equalsIgnoreCase("gets")) {
+            return new GetsCommand(Arrays.asList(Arrays.copyOfRange((String[])cmdLineObjs, 1, cmdLineObjs.length)));
+        }
+        if (cmd.equalsIgnoreCase("get")) {
+            return new GetCommand((String)cmdLineObjs[1]);
+        }
+        if (cmd.equalsIgnoreCase("delete")) {
+            return new DeleteCommand((String)cmdLineObjs[1]);
+        }
+        if (cmd.equalsIgnoreCase("set")) {
+            boolean isNoReply = (cmdLineObjs.length == 6 && ((String)cmdLineObjs[5]).equalsIgnoreCase("noreply"));
+
+            return StoreCommand.newBuilder()
+                    .withName("set")
+                    .withKey((String)cmdLineObjs[1])
+                    .withFlags((Integer)cmdLineObjs[2])
+                    .withExpTime((Long)cmdLineObjs[3])
+                    .withIsNoReploy(isNoReply)
+                    .withPayload(payload)
+                    .build();
+        }
+        if (cmd.equalsIgnoreCase("cas")) {
+            boolean isNoReply = (cmdLineObjs.length == 7 && ((String)cmdLineObjs[6]).equalsIgnoreCase("noreply"));
+
+            return StoreCommand.newBuilder()
+                    .withName("cas")
+                    .withKey((String)cmdLineObjs[1])
+                    .withFlags((Integer)cmdLineObjs[2])
+                    .withExpTime((Long)cmdLineObjs[3])
+                    .withIsNoReploy(isNoReply)
+                    .withCasUnique((Long)cmdLineObjs[5])
+                    .withPayload(payload)
+                    .build();
+        }
+        return null;
+    }
+}

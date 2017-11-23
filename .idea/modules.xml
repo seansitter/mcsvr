@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="ProjectModuleManager">
+    <modules>
+      <module fileurl="file://$PROJECT_DIR$/.idea/modules/mcsvr.iml" filepath="$PROJECT_DIR$/.idea/modules/mcsvr.iml" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/modules/mcsvr_main.iml" filepath="$PROJECT_DIR$/.idea/modules/mcsvr_main.iml" group="mcsvr" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/modules/mcsvr_test.iml" filepath="$PROJECT_DIR$/.idea/modules/mcsvr_test.iml" group="mcsvr" />
+    </modules>
+  </component>
+</project>
