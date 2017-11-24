@@ -27,6 +27,10 @@ public class CacheImpl implements Cache {
         this.eventListener = (eventListener == null) ? new DummyCacheEventListener() : eventListener;
     }
 
+    public void start() {
+
+    }
+
     public enum DeleteStatus {
         DELETED("DELETED"),
         NOT_FOUND("NOT_FOUND");
