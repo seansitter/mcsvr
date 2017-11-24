@@ -4,6 +4,7 @@ import com.google.inject.AbstractModule;
 import com.google.inject.Provides;
 import com.google.inject.Singleton;
 import com.google.inject.TypeLiteral;
+import com.google.inject.name.Named;
 import com.google.inject.name.Names;
 import io.netty.channel.ChannelInboundHandler;
 import io.netty.channel.ChannelOutboundHandler;
@@ -16,6 +17,7 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.locks.ReentrantReadWriteLock;
 
 /**
  * This class configures the dependency injection for the project
@@ -59,5 +61,11 @@ public class McServerConfig extends AbstractModule {
     @Provides
     ExecutorService provideExecutorService() {
         return Executors.newSingleThreadExecutor();
+    }
+
+    @Provides
+    @Named("cacheLock")
+    ReentrantReadWriteLock provideCacheLock() {
+        return new ReentrantReadWriteLock(false);
     }
 }
