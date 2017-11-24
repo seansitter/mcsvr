@@ -1,5 +1,8 @@
 package net.seansitter.mcsvr.cache;
 
+import com.google.inject.name.Named;
+
+import javax.inject.Inject;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
@@ -8,60 +11,26 @@ import java.util.stream.Collectors;
 public class CacheImpl implements Cache {
     private static final int SECS_IN_30_DAYS = 60*60*24*30;
 
-    private final HashMap<String, CacheValue> cache;
+    private final Map<String, CacheValue> cache;
     private final AtomicLong casCounter;
     private final CacheEventListener eventListener;
     private final ReentrantReadWriteLock readWriteLock;
 
-    public CacheImpl() {
-        this(null);
-    }
-
-    public CacheImpl(CacheEventListener eventListener) {
-        this.cache = new HashMap<>();
+    @Inject
+    public CacheImpl(CacheEventListener eventListener, @Named("cache") Map<String, CacheValue> cache) {
+        this.cache = cache;
         this.casCounter = new AtomicLong(0);
         // unfair lock is much faster, slight order penalty
         // the system makes no guarantees about the order of operations from unique connections relative to each other
         // rather, operations from a single connection should be totally ordered
         this.readWriteLock = new ReentrantReadWriteLock(false);
-        this.eventListener = (eventListener == null) ? new DummyCacheEventListener() : eventListener;
-    }
-
-    public enum DeleteStatus {
-        DELETED("DELETED"),
-        NOT_FOUND("NOT_FOUND");
-
-        private String status;
-        DeleteStatus(String status) {
-            this.status = status;
-        }
-
-        public String toString() {
-            return status;
-        }
-    }
-
-    public enum StoreStatus {
-        STORED("STORED"),
-        NOT_STORED("NOT_STORED"),
-        EXISTS("EXISTS"),
-        NOT_FOUND("NOT_FOUND");
-
-        private String status;
-        StoreStatus(String status) {
-            this.status = status;
-        }
-
-        @Override
-        public String toString() {
-            return status;
-        }
+        this.eventListener = eventListener;
     }
 
     @Override
-    public DeleteStatus deleteKey(String key) {
+    public ResponseStatus.DeleteStatus deleteKey(String key) {
         if (null == key) {
-            return DeleteStatus.NOT_FOUND;
+            return ResponseStatus.DeleteStatus.NOT_FOUND;
         }
 
         // acquire read lock - try to pre-verify key in read
@@ -69,20 +38,20 @@ public class CacheImpl implements Cache {
         try {
             CacheValue value = cache.get(key);
             if (null == value) {
-                return DeleteStatus.NOT_FOUND; // no key
+                return ResponseStatus.DeleteStatus.NOT_FOUND; // no key
             }
             readWriteLock.readLock().unlock(); // need to first release read lock since can't upgrade to write
             readWriteLock.writeLock().lock(); //  acquire write lock
             try {
                 value = cache.get(key);
                 if (null == value) { // re-check, could have been deleted in the meantime
-                    return DeleteStatus.NOT_FOUND;
+                    return ResponseStatus.DeleteStatus.NOT_FOUND;
                 }
 
                 cache.remove(key); // actually remove the item
                 eventListener.deleteEntry(new CacheEntry(key, value));
 
-                return DeleteStatus.DELETED;
+                return ResponseStatus.DeleteStatus.DELETED;
             }
             finally {
                 readWriteLock.writeLock().unlock();
@@ -176,16 +145,16 @@ public class CacheImpl implements Cache {
     }
 
     @Override
-    public StoreStatus cas(String key, byte[] value, long ttl, long casUnique, long flag) {
+    public ResponseStatus.StoreStatus cas(String key, byte[] value, long ttl, long casUnique, long flag) {
         if (null == key) {
-            return StoreStatus.NOT_FOUND;
+            return ResponseStatus.StoreStatus.NOT_FOUND;
         }
 
         readWriteLock.readLock().lock();
         try {
             CacheValue cacheValue = cache.get(key);
             if (null == cacheValue) {
-                return StoreStatus.NOT_FOUND;
+                return ResponseStatus.StoreStatus.NOT_FOUND;
             }
             else if (casUnique == cacheValue.getCasUnique()) {
                 readWriteLock.readLock().unlock();
@@ -195,18 +164,18 @@ public class CacheImpl implements Cache {
                     cacheValue = cache.get(key);
                     // need to check if it changed since we acquired the read lock
                     if (null == cacheValue) {
-                        return StoreStatus.NOT_FOUND;
+                        return ResponseStatus.StoreStatus.NOT_FOUND;
                     }
                     else if (cacheValue.getCasUnique() == casUnique) {
                         cacheValue = newCacheValue(value, ttl, flag);
                         cache.put(key, cacheValue);
                         // notify listeners
                         eventListener.updateEntry(new CacheEntry(key, cacheValue));
-                        return StoreStatus.STORED;
+                        return ResponseStatus.StoreStatus.STORED;
                     }
                     else {
                         // key exists and casUnique doesn't match
-                        return StoreStatus.EXISTS;
+                        return ResponseStatus.StoreStatus.EXISTS;
                     }
                 }
                 finally {
@@ -214,7 +183,7 @@ public class CacheImpl implements Cache {
                 }
             }
             else {
-                return StoreStatus.EXISTS;
+                return ResponseStatus.StoreStatus.EXISTS;
             }
         }
         finally {
@@ -226,7 +195,7 @@ public class CacheImpl implements Cache {
     }
 
     @Override
-    public StoreStatus set(String key, byte[] value, long ttl, long flag) {
+    public ResponseStatus.StoreStatus set(String key, byte[] value, long ttl, long flag) {
         // acquire write lock
         readWriteLock.writeLock().lock();
         try {
@@ -239,7 +208,7 @@ public class CacheImpl implements Cache {
             readWriteLock.writeLock().unlock();
         }
 
-        return StoreStatus.STORED;
+        return ResponseStatus.StoreStatus.STORED;
     }
 
     private long normalizeTtl(long ttl, long currTime) {
