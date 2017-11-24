@@ -10,6 +10,9 @@ import io.netty.channel.nio.NioEventLoopGroup;
 import io.netty.channel.socket.SocketChannel;
 import io.netty.channel.socket.nio.NioServerSocketChannel;
 import net.seansitter.mcsvr.cache.Cache;
+import org.apache.commons.cli.CommandLine;
+import org.apache.commons.cli.HelpFormatter;
+import org.apache.commons.cli.Options;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -17,10 +20,19 @@ import javax.inject.Inject;
 import java.net.InetSocketAddress;
 
 public class MCServer {
+    private final Logger logger = LoggerFactory.getLogger(MCServer.class);
+
     public static void main(String[] args) {
         Logger logger = LoggerFactory.getLogger(MCServer.class);
 
-        Injector injector = Guice.createInjector(new McServerConfig());
+        Injector injector = Guice.createInjector(new McServerConfig(args));
+        CommandLine cmdLn = injector.getInstance(CommandLine.class);
+
+        if (cmdLn.hasOption("help")) {
+            new HelpFormatter().printHelp("mcsvr", injector.getInstance(Options.class));
+            System.exit(0);
+        }
+
         try {
             logger.info("starting memcache server");
             MCServer mcServer = injector.getInstance(MCServer.class);
@@ -32,18 +44,21 @@ public class MCServer {
     }
 
     private final Cache cache;
+    private final int port;
     private final Provider<ChannelOutboundHandler> encoder;
     private final Provider<ChannelInboundHandler> decoder;
     private final Provider<ChannelInboundHandler> commandHandler;
     private final Provider<ChannelInboundHandler> errorHandler;
 
     @Inject
-    public MCServer(Cache cache,
+    public MCServer(@Named("svrPort") int port,
+                    Cache cache,
                     @Named("encoder") Provider<ChannelOutboundHandler> encoder,
                     @Named("decoder") Provider<ChannelInboundHandler> decoder,
                     @Named("commandHandler") Provider<ChannelInboundHandler> commandHandler,
                     @Named("errorHandler") Provider<ChannelInboundHandler> errorHandler) {
         this.cache = cache;
+        this.port = port;
         this.encoder = encoder;
         this.decoder = decoder;
         this.commandHandler = commandHandler;
@@ -60,7 +75,7 @@ public class MCServer {
             ServerBootstrap bootstrap = new ServerBootstrap();
             bootstrap.group(eventLoopGroup)
                     .channel(NioServerSocketChannel.class)
-                    .localAddress(new InetSocketAddress(11211))
+                    .localAddress(new InetSocketAddress(port))
                     .childHandler(new ChannelInitializer<SocketChannel>() {
                         @Override
                         protected void initChannel(SocketChannel ch) throws Exception {
@@ -71,6 +86,7 @@ public class MCServer {
                             ch.pipeline().addLast(errorHandler.get());
                         }
                     });
+            logger.info("started memcache server on port: "+port);
             ChannelFuture bindFuture = bootstrap.bind().sync();
             bindFuture.channel().closeFuture().sync();
         }

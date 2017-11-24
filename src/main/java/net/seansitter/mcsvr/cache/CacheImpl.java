@@ -3,6 +3,9 @@ package net.seansitter.mcsvr.cache;
 import net.seansitter.mcsvr.cache.listener.CacheEventListener;
 
 import com.google.inject.name.Named;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import javax.inject.Inject;
 import java.util.*;
 import java.util.concurrent.ScheduledExecutorService;
@@ -12,20 +15,25 @@ import java.util.concurrent.locks.ReadWriteLock;
 import java.util.stream.Collectors;
 
 public class CacheImpl implements Cache {
+    private final Logger logger = LoggerFactory.getLogger(CacheImpl.class);
+
     private static final int SECS_IN_30_DAYS = 60*60*24*30;
 
-    private final Map<String, CacheValue> cache;
+    private final Map<String, CacheValue> cache; // the backing cache
+    private final int reapInterval; // thre reap interval in seconds
     private final AtomicLong casCounter;
     private final ReadWriteLock lock; // in non-test this needs to be reentrant
     private final CacheEventListener eventListener;
-    private final ScheduledExecutorService schedExecutor;
+    private final ScheduledExecutorService schedExecutor; // executor for the reaper
 
     @Inject
     public CacheImpl(@Named("cache") Map<String, CacheValue> cache,
+                     @Named("reapInterval") Integer reapInterval,
                      @Named("cacheLock") ReadWriteLock lock,
                      @Named("cacheCleanup") ScheduledExecutorService schedExecutor,
                      CacheEventListener eventListener) {
         this.cache = cache;
+        this.reapInterval = reapInterval;
         // This will be an unfair lock, lock is much faster, slight order penalty
         // the system makes no guarantees about the order of operations from unique connections relative to each other
         // rather, operations from a single connection should be totally ordered
@@ -40,16 +48,18 @@ public class CacheImpl implements Cache {
     }
 
     private void scheduleCleanup() {
+        logger.info("scheduling reaper thread every "+reapInterval+" seconds");
         schedExecutor.scheduleAtFixedRate(
                 newCleanupTask(),
-                10000,
-                10000,
+                reapInterval * 1000,
+                reapInterval * 1000,
                 TimeUnit.MILLISECONDS);
     }
 
     protected Runnable newCleanupTask() {
         return () -> {
             long currTime = getCurrTime();
+            logger.info("running reaper at: "+currTime);
 
             // first generate the list of expired keys with a read lock
             LinkedList<String> expKeys = new LinkedList<>();
@@ -70,19 +80,7 @@ public class CacheImpl implements Cache {
                 return;
             }
 
-            // remove each expired key in a read lock
-            lock.writeLock().lock();
-            try {
-                if (expKeys.size() > 0) {
-                    expKeys.forEach(k -> {
-                        if (cache.containsKey(k)) {
-                            cache.remove(k);
-                        }
-                    });
-                }
-            } finally {
-                lock.writeLock().unlock();
-            }
+            destroyKeys(expKeys);
         };
     }
 
@@ -136,13 +134,16 @@ public class CacheImpl implements Cache {
         LinkedList<CacheEntry> deletedEntries = new LinkedList<>();
         try {
             int delSz = 0;
+            int delCt = 0;
             for (int i=0; i < keys.size(); i++) {
                 CacheValue value = cache.remove(keys.get(i));
                 if (null != value) {
                     deletedEntries.add(new CacheEntry(keys.get(i), value));
                     delSz += value.getSize();
+                    delCt += 1;
                 }
             }
+            logger.info("destroyed "+delCt+" keys totaling "+delSz+" bytes");
 
             eventListener.destroyEntries(deletedEntries, delSz);
         }
