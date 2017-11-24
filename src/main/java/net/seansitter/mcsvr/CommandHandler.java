@@ -6,21 +6,17 @@ import net.seansitter.mcsvr.domain.command.ApiCommand;
 import net.seansitter.mcsvr.domain.command.NoReplyCommand;
 import net.seansitter.mcsvr.domain.result.CacheResult;
 
+import javax.inject.Inject;
 import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
 
 public class CommandHandler extends SimpleChannelInboundHandler<ApiCommand> {
 
     private final ExecutorService executorService;
     private final ApiCacheCommandExecutor commandExecutor;
 
-
+    @Inject
     public CommandHandler(ExecutorService executorService, ApiCacheCommandExecutor commandExecutor){
-        this.executorService = executorService;
-        this.commandExecutor = commandExecutor;
-    }
-
-    public CommandHandler(ApiCacheCommandExecutor commandExecutor){
+        // This will be a Executors.newSingleThreadExecutor()
         // This is cheating a bit, as its probably not the most efficient to create a new executor for every new instance
         // of this class, but THE MOST IMPORTANT THING is that for a given client, all operations are ordered for the
         // client connection. It would certainly be more efficient to have a thread pool which would cache threads
@@ -28,8 +24,8 @@ public class CommandHandler extends SimpleChannelInboundHandler<ApiCommand> {
         // up and tearing down the machinery of threadpool executor & the penalty of thread creation on every request.
         // If I had all the time...
         //
-        // For the purposes of this exercise, the executor provides a nice interface + built in on a single thread queueing.
-        this.executorService = Executors.newSingleThreadExecutor();
+        // For the purposes of this exercise, the executor provides a nice interface + built in queueing.
+        this.executorService = executorService;
 
         this.commandExecutor = commandExecutor;
     }

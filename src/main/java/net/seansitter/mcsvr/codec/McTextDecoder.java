@@ -9,6 +9,7 @@ import net.seansitter.mcsvr.domain.command.DeleteCommand;
 import net.seansitter.mcsvr.domain.command.GetCommand;
 import net.seansitter.mcsvr.domain.command.StoreCommand;
 
+import javax.inject.Inject;
 import java.nio.charset.Charset;
 import java.util.List;
 
@@ -17,7 +18,12 @@ import java.util.List;
  */
 public class McTextDecoder extends ByteToMessageDecoder {
     private Object[] cmdLineObjs = null;
-    private static McCodecUtil codecUtil = new McCodecUtil();
+    private final McCodecUtil codecUtil;
+
+    @Inject
+    public McTextDecoder(McCodecUtil codecUtil) {
+        this.codecUtil = new McCodecUtil();
+    }
 
     @Override
     public void decode(ChannelHandlerContext ctx, ByteBuf in, List<Object> out)
