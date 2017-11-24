@@ -1,5 +1,7 @@
 package net.seansitter.mcsvr.cache;
 
+import net.seansitter.mcsvr.cache.listener.CacheEventListenerAdapter;
+
 import java.util.List;
 
 public class CacheMetrics extends CacheEventListenerAdapter {

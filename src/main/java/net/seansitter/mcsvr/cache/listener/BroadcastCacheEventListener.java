@@ -1,4 +1,6 @@
-package net.seansitter.mcsvr.cache;
+package net.seansitter.mcsvr.cache.listener;
+
+import net.seansitter.mcsvr.cache.CacheEntry;
 
 import java.util.LinkedList;
 import java.util.List;

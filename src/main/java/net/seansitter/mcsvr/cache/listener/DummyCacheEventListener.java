@@ -1,4 +1,4 @@
-package net.seansitter.mcsvr.cache;
+package net.seansitter.mcsvr.cache.listener;
 
 /**
  * Cache event listener which ignores all events
