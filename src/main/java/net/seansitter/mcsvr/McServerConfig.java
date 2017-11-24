@@ -19,6 +19,8 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.locks.ReadWriteLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 
 /**
@@ -67,7 +69,13 @@ public class McServerConfig extends AbstractModule {
 
     @Provides
     @Named("cacheLock")
-    ReentrantReadWriteLock provideCacheLock() {
-        return new ReentrantReadWriteLock(false);
+    ReadWriteLock provideCacheLock() {
+        return new ReentrantReadWriteLock(false); // unfair lock, see CacheImpl
+    }
+
+    @Provides
+    @Named("cacheCleanup")
+    ScheduledExecutorService provideCacheCleanupExecutor() {
+        return Executors.newSingleThreadScheduledExecutor();
     }
 }

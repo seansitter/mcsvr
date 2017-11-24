@@ -5,8 +5,10 @@ import net.seansitter.mcsvr.cache.listener.CacheEventListener;
 import com.google.inject.name.Named;
 import javax.inject.Inject;
 import java.util.*;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicLong;
-import java.util.concurrent.locks.ReentrantReadWriteLock;
+import java.util.concurrent.locks.ReadWriteLock;
 import java.util.stream.Collectors;
 
 public class CacheImpl implements Cache {
@@ -14,24 +16,74 @@ public class CacheImpl implements Cache {
 
     private final Map<String, CacheValue> cache;
     private final AtomicLong casCounter;
+    private final ReadWriteLock lock; // in non-test this needs to be reentrant
     private final CacheEventListener eventListener;
-    private final ReentrantReadWriteLock lock;
+    private final ScheduledExecutorService schedExecutor;
 
     @Inject
     public CacheImpl(@Named("cache") Map<String, CacheValue> cache,
-                     @Named("cacheLock") ReentrantReadWriteLock lock,
+                     @Named("cacheLock") ReadWriteLock lock,
+                     @Named("cacheCleanup") ScheduledExecutorService schedExecutor,
                      CacheEventListener eventListener) {
         this.cache = cache;
-        // unfair lock is much faster, slight order penalty
+        // This will be an unfair lock, lock is much faster, slight order penalty
         // the system makes no guarantees about the order of operations from unique connections relative to each other
         // rather, operations from a single connection should be totally ordered
         this.lock = lock;
+        this.schedExecutor = schedExecutor;
         this.eventListener = eventListener;
         this.casCounter = new AtomicLong(0);
     }
 
     public void start() {
+        scheduleCleanup();
+    }
 
+    private void scheduleCleanup() {
+        schedExecutor.scheduleAtFixedRate(
+                newCleanupTask(),
+                10000,
+                10000,
+                TimeUnit.MILLISECONDS);
+    }
+
+    protected Runnable newCleanupTask() {
+        return () -> {
+            long currTime = getCurrTime();
+
+            // first generate the list of expired keys with a read lock
+            LinkedList<String> expKeys = new LinkedList<>();
+            lock.readLock().lock();
+            try {
+                cache.forEach((k, v) -> {
+                    // need to recheck since it could have gone away
+                    if (v.getExpiresAt() < currTime) {
+                        expKeys.add(k);
+                    }
+                });
+            } finally {
+                lock.readLock().unlock();
+            }
+
+            // no expired keys
+            if (expKeys.size() == 0) {
+                return;
+            }
+
+            // remove each expired key in a read lock
+            lock.writeLock().lock();
+            try {
+                if (expKeys.size() > 0) {
+                    expKeys.forEach(k -> {
+                        if (cache.containsKey(k)) {
+                            cache.remove(k);
+                        }
+                    });
+                }
+            } finally {
+                lock.writeLock().unlock();
+            }
+        };
     }
 
     @Override
@@ -48,29 +100,25 @@ public class CacheImpl implements Cache {
             if (null == value) {
                 return ResponseStatus.DeleteStatus.NOT_FOUND; // no key
             }
-            lock.readLock().unlock(); // need to first release read lock since can't upgrade to write
-            lock.writeLock().lock(); //  acquire write lock
-            try {
-                value = cache.get(key);
-                if (null == value) { // re-check, could have been deleted in the meantime
-                    return ResponseStatus.DeleteStatus.NOT_FOUND;
-                }
-
-                cache.remove(key); // actually remove the item
-                eventListener.deleteEntry(new CacheEntry(key, value));
-
-                return ResponseStatus.DeleteStatus.DELETED;
-            }
-            finally {
-                lock.writeLock().unlock();
-            }
         }
         finally {
-            // release write lock
+            lock.readLock().unlock();
+        }
 
-            if (lock.getReadHoldCount() > 0) {
-                lock.readLock().unlock();
+        lock.writeLock().lock(); //  acquire write lock
+        try {
+            CacheValue value = cache.get(key);
+            if (null == value) { // re-check, could have been deleted in the meantime
+                return ResponseStatus.DeleteStatus.NOT_FOUND;
             }
+
+            cache.remove(key); // actually remove the item
+            eventListener.deleteEntry(new CacheEntry(key, value));
+
+            return ResponseStatus.DeleteStatus.DELETED;
+        }
+        finally {
+            lock.writeLock().unlock();
         }
     }
 
@@ -162,47 +210,44 @@ public class CacheImpl implements Cache {
             return ResponseStatus.StoreStatus.NOT_FOUND;
         }
 
+        // first we'll test under a read lock, since this is relatively cheap
         lock.readLock().lock();
         try {
             CacheValue cacheValue = cache.get(key);
             if (null == cacheValue) {
                 return ResponseStatus.StoreStatus.NOT_FOUND;
             }
-            else if (casUnique == cacheValue.getCasUnique()) {
-                lock.readLock().unlock();
-                lock.writeLock().lock();
-
-                try {
-                    cacheValue = cache.get(key);
-                    // need to check if it changed since we acquired the read lock
-                    if (null == cacheValue) {
-                        return ResponseStatus.StoreStatus.NOT_FOUND;
-                    }
-                    else if (cacheValue.getCasUnique() == casUnique) {
-                        cacheValue = newCacheValue(value, ttl, flag);
-                        cache.put(key, cacheValue);
-                        // notify listeners
-                        eventListener.updateEntry(new CacheEntry(key, cacheValue));
-                        return ResponseStatus.StoreStatus.STORED;
-                    }
-                    else {
-                        // key exists and casUnique doesn't match
-                        return ResponseStatus.StoreStatus.EXISTS;
-                    }
-                }
-                finally {
-                    lock.writeLock().unlock();
-                }
-            }
-            else {
+            else if (casUnique != cacheValue.getCasUnique()) {
                 return ResponseStatus.StoreStatus.EXISTS;
             }
         }
         finally {
-            // release write lock
-            if (lock.getReadHoldCount() > 0) {
-                lock.readLock().unlock();
+            lock.readLock().unlock();
+        }
+
+        // found writeable item, acquire write lock
+        lock.writeLock().lock();
+        try {
+            // need to re-test item since it may have been removed or updated
+            CacheValue cacheValue = cache.get(key);
+            // need to check if it changed since we acquired the read lock
+            if (null == cacheValue) {
+                return ResponseStatus.StoreStatus.NOT_FOUND;
             }
+            else if (cacheValue.getCasUnique() == casUnique) {
+                cacheValue = newCacheValue(value, ttl, flag);
+                cache.put(key, cacheValue);
+                // notify listeners
+                eventListener.updateEntry(new CacheEntry(key, cacheValue));
+                return ResponseStatus.StoreStatus.STORED;
+            }
+            else {
+                // key exists and casUnique doesn't match
+                return ResponseStatus.StoreStatus.EXISTS;
+            }
+        }
+        finally {
+            lock.writeLock().unlock();
         }
     }
 

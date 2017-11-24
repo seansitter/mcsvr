@@ -4,7 +4,7 @@ import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
 
-public class GetCommand implements ApiCommand, RetrieveCommand {
+public class GetCommand implements ApiCommand {
     private final String name;
     private final List<String> keys;
 
@@ -20,6 +20,11 @@ public class GetCommand implements ApiCommand, RetrieveCommand {
     @Override
     public String getName() {
         return name;
+    }
+
+    @Override
+    public boolean isNoReply() {
+        return false;
     }
 
     public static Builder newBuilder() {
