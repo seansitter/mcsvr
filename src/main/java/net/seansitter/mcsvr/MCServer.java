@@ -56,6 +56,7 @@ public class MCServer {
                     .childHandler(new ChannelInitializer<SocketChannel>() {
                         @Override
                         protected void initChannel(SocketChannel ch) throws Exception {
+                            // these all need to be providers because we need a new instance on each invocation
                             ch.pipeline().addLast(decoder.get());
                             ch.pipeline().addLast(encoder.get());
                             ch.pipeline().addLast(commandHandler.get());
