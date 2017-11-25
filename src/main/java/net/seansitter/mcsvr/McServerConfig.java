@@ -119,6 +119,12 @@ public class McServerConfig extends AbstractModule {
     }
 
     @Provides
+    @Named("cacheMetrics")
+    CacheMetrics provideCacheMetrics(CacheMetricsListener l) {
+        return l;
+    }
+
+    @Provides
     @Singleton
     CommandLine provideCmdlnConfig(Options options) throws ParseException {
         return new DefaultParser().parse(options, args);
@@ -133,6 +139,7 @@ public class McServerConfig extends AbstractModule {
         opts.addOption("reapInterval", true, "number of seconds between reaper sweeps");
         opts.addOption("idleTimeout", true, "number of seconds before idle connection is closed");
         opts.addOption("serverTimeout", true, "number of seconds before server response times out");
+        opts.addOption("disableReaper", false, "disables expired item reaper");
         return opts;
     }
 
@@ -172,8 +179,8 @@ public class McServerConfig extends AbstractModule {
     }
 
     @Provides
-    @Named("cacheMetrics")
-    CacheMetrics provideCacheMetrics(CacheMetricsListener l) {
-        return l;
+    @Named("disableReaper")
+    Boolean provideDisableReaper(CommandLine cmdLine) {
+        return cmdLine.hasOption("disableReaper");
     }
 }
