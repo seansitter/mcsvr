@@ -8,6 +8,7 @@ import net.seansitter.mcsvr.domain.command.ApiCommand;
 import net.seansitter.mcsvr.domain.command.DeleteCommand;
 import net.seansitter.mcsvr.domain.command.GetCommand;
 import net.seansitter.mcsvr.domain.command.StoreCommand;
+import net.seansitter.mcsvr.exception.InvalidCommandException;
 
 import javax.inject.Inject;
 import java.nio.charset.Charset;
@@ -15,6 +16,16 @@ import java.util.List;
 
 /**
  * This class implements the decoder for the memcache text protocol
+ * Retrieval:
+ * get <key>*\r\n
+ * gets <key>*\r\n
+ * Storage:
+ * set <key> <flags> <exptime> <bytes> [noreply]\r\n
+ * <data>
+ * cas <key> <flags> <exptime> <bytes> <cas unique> [noreply]\r\n
+ * <data>
+ * Delete:
+ * delete <key> [noreply]\r\n
  */
 public class McTextDecoder extends ByteToMessageDecoder {
     private Object[] cmdLineObjs = null;
@@ -32,19 +43,25 @@ public class McTextDecoder extends ByteToMessageDecoder {
     }
 
     protected void doDecode(ByteBuf in, List<Object> out) {
+        Object outObj;
+        // we might have multiple full commands in the buffer to decode
+        while (null != (outObj = doDecodeSingle(in))) {
+            out.add(outObj);
+        }
+    }
+
+    private Object doDecodeSingle(ByteBuf in) {
         if (null == cmdLineObjs) {
             cmdLineObjs = parseCommand(in);
             if (null == cmdLineObjs) {
-                return; // we don't have a full command yet, wait for more data
+                return null; // we don't have a full command yet, wait for more data
             }
 
             // if our command is retrieval we don't expect a payload so we're done
             if (!codecUtil.hasPayload((String)cmdLineObjs[0])) {
                 ApiCommand cmd = cmdLineObjsToCmd(this.cmdLineObjs, null);
-                out.add(cmd);
                 reset();
-
-                return;
+                return cmd;
             }
         }
 
@@ -53,11 +70,13 @@ public class McTextDecoder extends ByteToMessageDecoder {
             byte[] payload = new byte[byteLen];
             in.readBytes(byteLen).getBytes(0, payload);
             ApiCommand cmd = cmdLineObjsToCmd(cmdLineObjs, payload);
-            out.add(cmd);
 
             in.readBytes(2); // advance past \r\n
             reset();
+            return cmd;
         }
+
+        return null;
     }
 
     private void reset() {
@@ -104,13 +123,14 @@ public class McTextDecoder extends ByteToMessageDecoder {
             }
             return cmdParts;
         }
+        else if (cmd.equalsIgnoreCase("cas")) {
+            return toCasArr(cmdParts);
+        }
+        else if (cmd.equalsIgnoreCase("set")){
+            return toStoreArr(cmdParts);
+        }
         else {
-            if (cmd.equalsIgnoreCase("cas")) {
-                return toCasArr(cmdParts);
-            }
-            else {
-                return toStoreArr(cmdParts);
-            }
+            throw new InvalidCommandException(cmd);
         }
     }
 
