@@ -3,16 +3,14 @@ package net.seansitter.mcsvr.cache;
 public class CacheValue {
     private final byte[] payload;
     private final long flag;
-    private final long createdAt;
-    private final long expiresAt;
     private final long casUnique;
+    private final CacheValueStats stats;
 
     public CacheValue(byte[] payload, long flag, long createdAt, long expiresAt, long casUnique) {
         this.payload = payload;
         this.flag = flag;
-        this.createdAt = createdAt;
-        this.expiresAt = expiresAt;
         this.casUnique = casUnique;
+        this.stats = new CacheValueStats(createdAt, expiresAt, payload.length);
     }
 
     public byte[] getPayload() {
@@ -23,19 +21,23 @@ public class CacheValue {
         return flag;
     }
 
-    public long getCreatedAt() {
-        return createdAt;
-    }
-
-    public long getExpiresAt() {
-        return expiresAt;
-    }
-
     public long getCasUnique() {
         return casUnique;
     }
 
-    public long getSize() {
-        return payload.length;
+    public long getCreatedAt() {
+        return stats.createdAt;
+    }
+
+    public long getExpiresAt() {
+        return stats.expiresAt;
+    }
+
+    public int getSize() {
+        return stats.size;
+    }
+
+    public CacheValueStats getStats() {
+        return stats;
     }
 }

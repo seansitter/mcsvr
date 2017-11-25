@@ -9,6 +9,7 @@ import net.seansitter.mcsvr.domain.command.DeleteCommand;
 import net.seansitter.mcsvr.domain.command.GetCommand;
 import net.seansitter.mcsvr.domain.command.StoreCommand;
 
+import javax.inject.Inject;
 import java.nio.charset.Charset;
 import java.util.List;
 
@@ -17,7 +18,12 @@ import java.util.List;
  */
 public class McTextDecoder extends ByteToMessageDecoder {
     private Object[] cmdLineObjs = null;
-    private static McCodecUtil codecUtil = new McCodecUtil();
+    private final McCodecUtil codecUtil;
+
+    @Inject
+    public McTextDecoder(McCodecUtil codecUtil) {
+        this.codecUtil = new McCodecUtil();
+    }
 
     @Override
     public void decode(ChannelHandlerContext ctx, ByteBuf in, List<Object> out)
@@ -106,25 +112,29 @@ public class McTextDecoder extends ByteToMessageDecoder {
     }
 
     private Object[] toCasArr(String[] arr) {
-        Object[] ret = new Object[7];
+        Object[] ret = new Object[arr.length];
         ret[0] = arr[0];
         ret[1] = arr[1];
         ret[2] = new Integer(Integer.parseUnsignedInt(arr[2])); // flags
         ret[3] = new Long(Long.parseUnsignedLong(arr[3])); // exptime
         ret[4] = new Integer(Integer.parseUnsignedInt(arr[4])); // bytes
         ret[5] = new Long(Long.parseUnsignedLong(arr[5])); // cas
-        ret[6] = arr[6];
+        if (arr.length == 7) {
+            ret[6] = arr[6];
+        }
         return ret;
     }
 
     private Object[] toStoreArr(String[] arr) {
-        Object[] ret = new Object[6];
+        Object[] ret = new Object[arr.length];
         ret[0] = arr[0];
         ret[1] = arr[1];
         ret[2] = new Integer(Integer.parseUnsignedInt(arr[2])); // flags
         ret[3] = new Long(Long.parseUnsignedLong(arr[3])); // exptime
         ret[4] = new Integer(Integer.parseUnsignedInt(arr[4])); // bytes
-        ret[5] = arr[5];
+        if (arr.length == 6) {
+            ret[5] = arr[5];
+        }
         return ret;
     }
 

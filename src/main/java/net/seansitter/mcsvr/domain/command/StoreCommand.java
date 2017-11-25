@@ -1,6 +1,6 @@
 package net.seansitter.mcsvr.domain.command;
 
-public class StoreCommand implements ApiCommand, NoReplyCommand {
+public class StoreCommand implements ApiCommand {
     private final String name;
     private final String key;
     private final byte[] payload;

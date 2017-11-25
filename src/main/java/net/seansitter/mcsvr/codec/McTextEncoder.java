@@ -50,7 +50,7 @@ public class McTextEncoder extends MessageToByteEncoder<CacheResult> {
         writeCrlf(out);
     }
 
-    protected void writeGetsCacheEntry(CacheEntry cacheEntry, ByteBuf out) {
+    protected void writeGetsCacheEntry(CacheEntry<CacheValue> cacheEntry, ByteBuf out) {
         writeCacheValue(cacheEntry, out);
         writeString(String.format(" %d", cacheEntry.getValue().getCasUnique()), out);
         writeCrlf(out);
@@ -58,12 +58,12 @@ public class McTextEncoder extends MessageToByteEncoder<CacheResult> {
         writeCrlf(out);
     }
 
-    protected void writeCacheValue(CacheEntry cacheEntry, ByteBuf out) {
+    protected void writeCacheValue(CacheEntry<CacheValue> cacheEntry, ByteBuf out) {
         CacheValue v = cacheEntry.getValue();
         writeString(String.format("VALUE %s %d %d", cacheEntry.getKey(), v.getFlag(), v.getSize()), out);
     }
 
-    protected void writeCachePayload(CacheEntry cacheEntry, ByteBuf out) {
+    protected void writeCachePayload(CacheEntry<CacheValue> cacheEntry, ByteBuf out) {
         out.writeBytes(cacheEntry.getValue().getPayload());
     }
 

@@ -1,15 +1,15 @@
 package net.seansitter.mcsvr.domain.result;
 
-import net.seansitter.mcsvr.cache.CacheImpl;
+import net.seansitter.mcsvr.cache.ResponseStatus;
 
 public class StoreCacheResult implements StatusCacheResult {
-    private final CacheImpl.StoreStatus status;
+    private final ResponseStatus.StoreStatus status;
 
-    public StoreCacheResult(CacheImpl.StoreStatus status) {
+    public StoreCacheResult(ResponseStatus.StoreStatus status) {
         this.status = status;
     }
 
-    private final CacheImpl.StoreStatus getStatus() {
+    private final ResponseStatus.StoreStatus getStatus() {
         return status;
     }
 

@@ -1,10 +1,10 @@
 package net.seansitter.mcsvr.cache;
 
-public class CacheEntry {
+public class CacheEntry<T> {
     private final String key;
-    private final CacheValue value;
+    private final T value;
 
-    public CacheEntry(String key, CacheValue value) {
+    public CacheEntry(String key, T value) {
         this.key = key;
         this.value = value;
     }
@@ -13,7 +13,7 @@ public class CacheEntry {
         return key;
     }
 
-    public CacheValue getValue() {
+    public T getValue() {
         return value;
     }
 }

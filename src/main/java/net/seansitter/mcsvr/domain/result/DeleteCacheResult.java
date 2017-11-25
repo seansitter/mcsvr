@@ -1,15 +1,15 @@
 package net.seansitter.mcsvr.domain.result;
 
-import net.seansitter.mcsvr.cache.CacheImpl;
+import net.seansitter.mcsvr.cache.ResponseStatus;
 
 public class DeleteCacheResult implements StatusCacheResult {
-    private final CacheImpl.DeleteStatus status;
+    private final ResponseStatus.DeleteStatus status;
 
-    public DeleteCacheResult(CacheImpl.DeleteStatus status) {
+    public DeleteCacheResult(ResponseStatus.DeleteStatus status) {
         this.status = status;
     }
 
-    public CacheImpl.DeleteStatus getStatus() {
+    public ResponseStatus.DeleteStatus getStatus() {
         return status;
     }
 

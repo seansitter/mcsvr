@@ -1,4 +1,4 @@
-package net.seansitter.mcsvr;
+package net.seansitter.mcsvr.handler;
 
 import net.seansitter.mcsvr.domain.command.ApiCommand;
 import net.seansitter.mcsvr.domain.result.CacheResult;

@@ -1,4 +1,4 @@
-package net.seansitter.mcsvr;
+package net.seansitter.mcsvr.handler;
 
 import net.seansitter.mcsvr.cache.Cache;
 import net.seansitter.mcsvr.domain.command.ApiCommand;
@@ -7,9 +7,12 @@ import net.seansitter.mcsvr.domain.command.GetCommand;
 import net.seansitter.mcsvr.domain.command.StoreCommand;
 import net.seansitter.mcsvr.domain.result.*;
 
+import javax.inject.Inject;
+
 public class ApiCacheCommandExecutorImpl implements ApiCacheCommandExecutor {
     private final Cache cache;
 
+    @Inject
     public ApiCacheCommandExecutorImpl(Cache cache) {
         this.cache = cache;
     }

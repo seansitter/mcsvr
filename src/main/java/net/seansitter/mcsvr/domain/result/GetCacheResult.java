@@ -1,15 +1,16 @@
 package net.seansitter.mcsvr.domain.result;
 
 import net.seansitter.mcsvr.cache.CacheEntry;
+import net.seansitter.mcsvr.cache.CacheValue;
 
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Optional;
 
 public class GetCacheResult implements CacheResult {
-    private final List<CacheEntry> cacheEntries;
+    private final List<CacheEntry<CacheValue>> cacheEntries;
 
-    public GetCacheResult(List<CacheEntry> cacheEntries) {
+    public GetCacheResult(List<CacheEntry<CacheValue>> cacheEntries) {
         this.cacheEntries = cacheEntries;
     }
 
@@ -18,7 +19,7 @@ public class GetCacheResult implements CacheResult {
         entry.ifPresent(e -> cacheEntries.add(e));
     }
 
-    public List<CacheEntry> getCacheEntries() {
+    public List<CacheEntry<CacheValue>> getCacheEntries() {
         return cacheEntries;
     }
 }
