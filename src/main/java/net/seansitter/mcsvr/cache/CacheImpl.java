@@ -174,7 +174,7 @@ public class CacheImpl implements Cache {
                     delCt += 1;
                 }
             }
-            logger.info("destroyed "+delCt+" keys totaling "+delSz+" bytes");
+            logger.info("destroyed "+delCt+" items(s) totaling "+delSz+" bytes");
 
             eventListener.sendMessage(
                     EventMessage.newEventMessage(

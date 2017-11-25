@@ -78,6 +78,7 @@ public class LRUManagerListener implements CacheEventListener {
         }
 
         protected void start() {
+            logger.info("starting lru thread");
             new Thread(() -> {
                 while(true) {
                     try {
@@ -111,7 +112,7 @@ public class LRUManagerListener implements CacheEventListener {
 
         protected void destroyEntries(DestroyEntriesMessage msg) {
             msg.entries.forEach(e -> deleteEntry(e));
-            logger.info("destroyed items, new cache size is "+currSz+" bytes");
+            logger.info("destroyed "+msg.entries.size()+" item(s), new cache size is "+currSz+" bytes");
         }
 
         protected void deleteEntry(CacheEntry<CacheValueStats> e) {
