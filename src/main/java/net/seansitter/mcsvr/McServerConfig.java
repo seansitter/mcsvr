@@ -80,7 +80,7 @@ public class McServerConfig extends AbstractModule {
                 .to(InBoundExceptionHandler.class);
 
         // cache (concrete) event listeners
-        bind(CacheMetricsListener.class);
+        bind(CacheMetricsListener.class).in(Singleton.class);
         bind(LRUManagerListener.class);
 
         // command executor
