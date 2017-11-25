@@ -74,7 +74,7 @@ public class CacheMetricsListener implements CacheEventListener, CacheMetrics {
 
     public void destroyEntries(DestroyEntriesMessage destroyEntriesMessage) {
         // not concerned about invariants here
-        cacheSize.addAndGet((-1) * destroyEntriesMessage.entries.size());
+        cacheSize.addAndGet((-1) * destroyEntriesMessage.szChange);
         cacheItems.addAndGet((-1) * destroyEntriesMessage.entries.size());
     }
 }

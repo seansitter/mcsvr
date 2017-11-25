@@ -10,6 +10,7 @@ import io.netty.channel.nio.NioEventLoopGroup;
 import io.netty.channel.socket.SocketChannel;
 import io.netty.channel.socket.nio.NioServerSocketChannel;
 import net.seansitter.mcsvr.cache.Cache;
+import net.seansitter.mcsvr.jmx.MCServerManagement;
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.HelpFormatter;
 import org.apache.commons.cli.Options;
@@ -17,6 +18,10 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.inject.Inject;
+import javax.management.InstanceAlreadyExistsException;
+import javax.management.MBeanRegistrationException;
+import javax.management.MalformedObjectNameException;
+import javax.management.NotCompliantMBeanException;
 import java.net.InetSocketAddress;
 
 public class MCServer {
@@ -31,6 +36,18 @@ public class MCServer {
         if (cmdLn.hasOption("help")) {
             new HelpFormatter().printHelp("mcsvr", injector.getInstance(Options.class));
             System.exit(0);
+        }
+
+        try {
+            injector.getInstance(MCServerManagement.class).start();
+        } catch (MalformedObjectNameException e) {
+            e.printStackTrace();
+        } catch (NotCompliantMBeanException e) {
+            e.printStackTrace();
+        } catch (InstanceAlreadyExistsException e) {
+            e.printStackTrace();
+        } catch (MBeanRegistrationException e) {
+            e.printStackTrace();
         }
 
         try {

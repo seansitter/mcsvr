@@ -17,6 +17,9 @@ import net.seansitter.mcsvr.handler.ApiCacheCommandExecutor;
 import net.seansitter.mcsvr.handler.ApiCacheCommandExecutorImpl;
 import net.seansitter.mcsvr.handler.CommandHandler;
 import net.seansitter.mcsvr.handler.InBoundExceptionHandler;
+import net.seansitter.mcsvr.jmx.CacheMetricsJmxMBean;
+import net.seansitter.mcsvr.jmx.CacheMetricsJmx;
+import net.seansitter.mcsvr.jmx.MCServerManagement;
 import org.apache.commons.cli.DefaultParser;
 import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
@@ -85,6 +88,11 @@ public class McServerConfig extends AbstractModule {
 
         // command executor
         bind(ApiCacheCommandExecutor.class).to(ApiCacheCommandExecutorImpl.class);
+
+        // jmx management
+        bind(CacheMetricsJmxMBean.class).to(CacheMetricsJmx.class);
+        bind(MCServerManagement.class);
+
     }
 
     @Provides
@@ -148,5 +156,11 @@ public class McServerConfig extends AbstractModule {
     Integer provideMaxCacheBytes(CommandLine cmdLine) {
         return cmdLine.hasOption("maxCacheBytes") ?
                 Integer.parseInt(cmdLine.getOptionValue("maxCacheBytes")) : DEFAULT_MAX_CACHE_BYTES;
+    }
+
+    @Provides
+    @Named("cacheMetrics")
+    CacheMetrics provideCacheMetrics(CacheMetricsListener l) {
+        return l;
     }
 }
