@@ -28,7 +28,10 @@ public class McTextDecoder extends ByteToMessageDecoder {
     @Override
     public void decode(ChannelHandlerContext ctx, ByteBuf in, List<Object> out)
             throws Exception {
+        doDecode(in, out);
+    }
 
+    protected void doDecode(ByteBuf in, List<Object> out) {
         if (null == cmdLineObjs) {
             cmdLineObjs = parseCommand(in);
             if (null == cmdLineObjs) {

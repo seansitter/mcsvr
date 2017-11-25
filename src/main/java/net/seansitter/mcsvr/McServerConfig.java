@@ -8,18 +8,13 @@ import com.google.inject.name.Named;
 import com.google.inject.name.Names;
 import io.netty.channel.ChannelInboundHandler;
 import io.netty.channel.ChannelOutboundHandler;
+
 import net.seansitter.mcsvr.cache.*;
 import net.seansitter.mcsvr.cache.listener.*;
-import net.seansitter.mcsvr.codec.McCodecUtil;
-import net.seansitter.mcsvr.codec.McTextDecoder;
-import net.seansitter.mcsvr.codec.McTextEncoder;
-import net.seansitter.mcsvr.handler.ApiCacheCommandExecutor;
-import net.seansitter.mcsvr.handler.ApiCacheCommandExecutorImpl;
-import net.seansitter.mcsvr.handler.CommandHandler;
-import net.seansitter.mcsvr.handler.InBoundExceptionHandler;
-import net.seansitter.mcsvr.jmx.CacheMetricsJmxMBean;
-import net.seansitter.mcsvr.jmx.CacheMetricsJmx;
-import net.seansitter.mcsvr.jmx.MCServerManagement;
+import net.seansitter.mcsvr.codec.*;
+import net.seansitter.mcsvr.handler.*;
+import net.seansitter.mcsvr.jmx.*;
+
 import org.apache.commons.cli.DefaultParser;
 import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
@@ -49,7 +44,7 @@ public class McServerConfig extends AbstractModule {
 
     @Override
     protected void configure() {
-        bind(MCServer.class);
+        bind(McServer.class);
 
         // cache itself is a singleton
         bind(Cache.class).to(CacheImpl.class).in(Singleton.class);

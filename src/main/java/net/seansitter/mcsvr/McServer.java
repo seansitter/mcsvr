@@ -24,11 +24,11 @@ import javax.management.MalformedObjectNameException;
 import javax.management.NotCompliantMBeanException;
 import java.net.InetSocketAddress;
 
-public class MCServer {
-    private final Logger logger = LoggerFactory.getLogger(MCServer.class);
+public class McServer {
+    private final Logger logger = LoggerFactory.getLogger(McServer.class);
 
     public static void main(String[] args) {
-        Logger logger = LoggerFactory.getLogger(MCServer.class);
+        Logger logger = LoggerFactory.getLogger(McServer.class);
 
         Injector injector = Guice.createInjector(new McServerConfig(args));
         CommandLine cmdLn = injector.getInstance(CommandLine.class);
@@ -52,7 +52,7 @@ public class MCServer {
 
         try {
             logger.info("starting memcache server");
-            MCServer mcServer = injector.getInstance(MCServer.class);
+            McServer mcServer = injector.getInstance(McServer.class);
             mcServer.start();
         }
         catch (Exception e) {
@@ -68,7 +68,7 @@ public class MCServer {
     private final Provider<ChannelInboundHandler> errorHandler;
 
     @Inject
-    public MCServer(@Named("svrPort") int port,
+    public McServer(@Named("svrPort") int port,
                     Cache cache,
                     @Named("encoder") Provider<ChannelOutboundHandler> encoder,
                     @Named("decoder") Provider<ChannelInboundHandler> decoder,
