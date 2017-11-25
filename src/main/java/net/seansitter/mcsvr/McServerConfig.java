@@ -37,6 +37,8 @@ public class McServerConfig extends AbstractModule {
     private static final int DEFAULT_REAP_INTERVAL_S = 30;
     private static final int DEFAULT_SERVER_PORT = 11211;
     private static final int DEFAULT_MAX_CACHE_BYTES = 0;
+    private static final int DEFAULT_CLIENT_TO = 10;
+    private static final int DEFAULT_SERVER_TO = 10;
 
     public McServerConfig(String[] args) {
         this.args = args;
@@ -75,7 +77,7 @@ public class McServerConfig extends AbstractModule {
         // netty error handler
         bind(ChannelInboundHandler.class)
                 .annotatedWith(Names.named("errorHandler"))
-                .to(InBoundExceptionHandler.class);
+                .to(InBoundErrorHandler.class);
 
         // cache (concrete) event listeners
         bind(CacheMetricsListener.class).in(Singleton.class);
@@ -129,6 +131,8 @@ public class McServerConfig extends AbstractModule {
         opts.addOption("port", true, "server port");
         opts.addOption("maxCacheBytes", true, "the max cache size in bytes");
         opts.addOption("reapInterval", true, "number of seconds between reaper sweeps");
+        opts.addOption("idleTimeout", true, "number of seconds before idle connection is closed");
+        opts.addOption("serverTimeout", true, "number of seconds before server response times out");
         return opts;
     }
 
@@ -151,6 +155,20 @@ public class McServerConfig extends AbstractModule {
     Integer provideMaxCacheBytes(CommandLine cmdLine) {
         return cmdLine.hasOption("maxCacheBytes") ?
                 Integer.parseInt(cmdLine.getOptionValue("maxCacheBytes")) : DEFAULT_MAX_CACHE_BYTES;
+    }
+
+    @Provides
+    @Named("idleTimeout")
+    Integer provideIdleTimeout(CommandLine cmdLine) {
+        return cmdLine.hasOption("idleTimeout") ?
+                Integer.parseInt(cmdLine.getOptionValue("idleTimeout")) : DEFAULT_CLIENT_TO;
+    }
+
+    @Provides
+    @Named("serverTimeout")
+    Integer provideServerTimeout(CommandLine cmdLine) {
+        return cmdLine.hasOption("serverTimeout") ?
+                Integer.parseInt(cmdLine.getOptionValue("serverTimeout")) : DEFAULT_SERVER_TO;
     }
 
     @Provides

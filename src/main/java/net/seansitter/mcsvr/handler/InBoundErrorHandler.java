@@ -1,7 +1,10 @@
 package net.seansitter.mcsvr.handler;
 
+import io.netty.channel.ChannelFutureListener;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.ChannelInboundHandlerAdapter;
+import io.netty.handler.timeout.IdleState;
+import io.netty.handler.timeout.IdleStateEvent;
 import net.seansitter.mcsvr.domain.result.ErrorResult;
 import net.seansitter.mcsvr.exception.ClientException;
 import net.seansitter.mcsvr.exception.InvalidCommandException;
@@ -12,7 +15,7 @@ import static net.seansitter.mcsvr.cache.ResponseStatus.ErrorStatus;
 /**
  * Exceptions in the pipeline will be handler here
  */
-public class InBoundExceptionHandler extends ChannelInboundHandlerAdapter {
+public class InBoundErrorHandler extends ChannelInboundHandlerAdapter {
     @Override
     public void exceptionCaught(ChannelHandlerContext ctx, Throwable cause) {
         if (ExceptionUtils.indexOfThrowable(cause, InvalidCommandException.class) >= 0) {
@@ -31,5 +34,20 @@ public class InBoundExceptionHandler extends ChannelInboundHandlerAdapter {
 
         // always close connection on error
         ctx.close();
+    }
+
+    @Override
+    public void userEventTriggered(ChannelHandlerContext ctx, Object evt) throws Exception {
+        if (evt instanceof IdleStateEvent) {
+            IdleStateEvent e = (IdleStateEvent) evt;
+            if (e.state() == IdleState.READER_IDLE) {
+                // just close idle client connection
+                ctx.close();
+            } else if (e.state() == IdleState.WRITER_IDLE) {
+                // if the server took too long, write server error message and close socket
+                ctx.writeAndFlush(new ErrorResult(ErrorStatus.SERVER_ERROR, "server took too long"))
+                        .addListener(ChannelFutureListener.CLOSE);
+            }
+        }
     }
 }

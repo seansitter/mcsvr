@@ -9,6 +9,7 @@ import io.netty.channel.*;
 import io.netty.channel.nio.NioEventLoopGroup;
 import io.netty.channel.socket.SocketChannel;
 import io.netty.channel.socket.nio.NioServerSocketChannel;
+import io.netty.handler.timeout.IdleStateHandler;
 import net.seansitter.mcsvr.cache.Cache;
 import net.seansitter.mcsvr.jmx.MCServerManagement;
 import org.apache.commons.cli.CommandLine;
@@ -66,6 +67,8 @@ public class McServer {
     private final Provider<ChannelInboundHandler> decoder;
     private final Provider<ChannelInboundHandler> commandHandler;
     private final Provider<ChannelInboundHandler> errorHandler;
+    private final int idleTimeout;
+    private final int serverTimeout;
 
     @Inject
     public McServer(@Named("svrPort") int port,
@@ -73,19 +76,25 @@ public class McServer {
                     @Named("encoder") Provider<ChannelOutboundHandler> encoder,
                     @Named("decoder") Provider<ChannelInboundHandler> decoder,
                     @Named("commandHandler") Provider<ChannelInboundHandler> commandHandler,
-                    @Named("errorHandler") Provider<ChannelInboundHandler> errorHandler) {
+                    @Named("errorHandler") Provider<ChannelInboundHandler> errorHandler,
+                    @Named("idleTimeout") int idleTimeout,
+                    @Named("serverTimeout") int serverTimeout) {
         this.cache = cache;
         this.port = port;
         this.encoder = encoder;
         this.decoder = decoder;
         this.commandHandler = commandHandler;
         this.errorHandler = errorHandler;
+        this.idleTimeout = idleTimeout;
+        this.serverTimeout = serverTimeout;
     }
 
     public void start() throws Exception {
 
         // starting cache will schedule expired item cleanup thread
         cache.start();
+        logger.info("idle timeout is "+idleTimeout+" seconds");
+        logger.info("server timeout is "+serverTimeout+" seconds");
 
         EventLoopGroup eventLoopGroup = new NioEventLoopGroup();
         try {
@@ -96,11 +105,15 @@ public class McServer {
                     .childHandler(new ChannelInitializer<SocketChannel>() {
                         @Override
                         protected void initChannel(SocketChannel ch) throws Exception {
-                            // these all need to be providers because we need a new instance on each invocation
-                            ch.pipeline().addLast(decoder.get());
-                            ch.pipeline().addLast(encoder.get());
-                            ch.pipeline().addLast(commandHandler.get());
-                            ch.pipeline().addLast(errorHandler.get());
+                            // if the connection is idle for 10s on either read or write, disconnect
+                            ch.pipeline().addLast("idleStateHandler",
+                                    new IdleStateHandler(idleTimeout, serverTimeout, 0));
+
+                            // these all need to be providers because we need a new instance on each invocation/**/
+                            ch.pipeline().addLast("decoderHandler", decoder.get());
+                            ch.pipeline().addLast("encoderHandler", encoder.get());
+                            ch.pipeline().addLast("commandHandler", commandHandler.get());
+                            ch.pipeline().addLast("errorHandler", errorHandler.get());
                         }
                     });
             logger.info("started memcache server on port: "+port);
