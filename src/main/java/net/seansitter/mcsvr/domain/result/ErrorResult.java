@@ -24,4 +24,27 @@ public class ErrorResult implements StatusCacheResult {
 
         return String.format("%s %s", status.toString(), message);
     }
+
+    /**
+     * Convenience for testing, yes should probably override hashcode
+     *
+     * @param o
+     * @return
+     */
+    @Override
+    public boolean equals(Object o) {
+        if (!(o instanceof ErrorResult)) {
+            return false;
+        }
+        ErrorResult oe = (ErrorResult)o;
+
+        if(null == oe.status && null != status) {
+            return false;
+        }
+        if(null == oe.message && null != message) {
+            return false;
+        }
+
+        return (null == oe.message || oe.message.equals(message)) && (null == oe.status || oe.status.equals(status));
+    }
 }

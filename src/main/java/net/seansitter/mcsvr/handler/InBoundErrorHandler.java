@@ -30,16 +30,16 @@ public class InBoundErrorHandler extends ChannelInboundHandlerAdapter {
     public void exceptionCaught(ChannelHandlerContext ctx, Throwable cause) {
         if (ExceptionUtils.indexOfThrowable(cause, InvalidCommandException.class) >= 0) {
             // ErrorStatus.ERROR - poorly name, per protocol means invalid command
-            ctx.write(new ErrorResult(ErrorStatus.ERROR));
+            ctx.writeAndFlush(new ErrorResult(ErrorStatus.ERROR));
             logger.info("client error - invalid command");
         }
         else if(ExceptionUtils.indexOfThrowable(cause, ClientException.class) >= 0) {
-            ctx.write(new ErrorResult(ErrorStatus.CLIENT_ERROR, cause.getMessage()));
+            ctx.writeAndFlush(new ErrorResult(ErrorStatus.CLIENT_ERROR, cause.getMessage()));
             logger.info("client error - " + cause.getMessage());
         }
         else { // all other exceptions are server exceptions
             // not sure what is appropriate reason here
-            ctx.write(new ErrorResult(ErrorStatus.SERVER_ERROR, "the server encountered an error"));
+            ctx.writeAndFlush(new ErrorResult(ErrorStatus.SERVER_ERROR, "the server encountered an error"));
             logger.error("received a server error", cause);
         }
 
