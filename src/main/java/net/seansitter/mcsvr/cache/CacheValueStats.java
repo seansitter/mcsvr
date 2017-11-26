@@ -13,4 +13,14 @@ public class CacheValueStats {
         this.expiresAt = expiresAt;
         this.size = size;
     }
+
+    @Override
+    public boolean equals(Object o) {
+        if (!(o instanceof CacheValueStats)) {
+            return false;
+        }
+
+        CacheValueStats vs = (CacheValueStats)o;
+        return vs.createdAt == createdAt && vs.expiresAt == expiresAt && vs.size == size;
+    }
 }
