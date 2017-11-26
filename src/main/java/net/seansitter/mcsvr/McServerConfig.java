@@ -35,8 +35,8 @@ public class McServerConfig extends AbstractModule {
     private static final int DEFAULT_REAP_INTERVAL_S = 30;
     private static final int DEFAULT_SERVER_PORT = 11211;
     private static final int DEFAULT_MAX_CACHE_BYTES = 0;
-    private static final int DEFAULT_CLIENT_TO = 10;
-    private static final int DEFAULT_SERVER_TO = 10;
+    private static final int DEFAULT_CLIENT_TO = 0;
+    private static final int DEFAULT_SERVER_TO = 0;
     private static final int DEFAULT_LRU_RECOVER_PCT = 20;
 
     public McServerConfig(String[] args) {
