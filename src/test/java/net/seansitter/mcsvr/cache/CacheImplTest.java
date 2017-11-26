@@ -3,6 +3,7 @@ package net.seansitter.mcsvr.cache;
 import io.netty.util.CharsetUtil;
 import net.seansitter.mcsvr.cache.listener.CacheEventListener;
 import net.seansitter.mcsvr.cache.listener.EventMessage;
+import static net.seansitter.mcsvr.cache.ResponseStatus.*;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -83,22 +84,37 @@ public class CacheImplTest {
 
     @Test
     public void testCasOk() {
-
+        setDefaultValueInCache();
+        Optional<CacheEntry<CacheValue>> v = cache.get(DEFKEY);
+        StoreStatus r = cache.cas(DEFKEY, byteVal("new value"), DEFTTL, v.get().getValue().getCasUnique(), DEFFLAG);
+        assertEquals(r, StoreStatus.STORED);
     }
 
     @Test
     public void testCasMismatch() {
-
+        setDefaultValueInCache();
+        Optional<CacheEntry<CacheValue>> v = cache.get(DEFKEY);
+        cache.set(DEFKEY, byteVal("new_val"), DEFTTL, DEFFLAG);
+        StoreStatus r = cache.cas(DEFKEY, byteVal("new value"), DEFTTL, v.get().getValue().getCasUnique(), DEFFLAG);
+        assertEquals(r, StoreStatus.EXISTS);
     }
 
     @Test
     public void testCasExpired() {
-
+        cache.set(DEFKEY, byteVal("new_val"), NOW+2, DEFFLAG);
+        Optional<CacheEntry<CacheValue>> v = cache.get(DEFKEY);
+        cache.setRelTime(NOW+3);
+        StoreStatus r = cache.cas(DEFKEY, byteVal("new value"), DEFTTL, v.get().getValue().getCasUnique(), DEFFLAG);
+        assertEquals(r, StoreStatus.NOT_FOUND);
     }
 
     @Test
     public void testCasNotFound() {
-
+        setDefaultValueInCache();
+        Optional<CacheEntry<CacheValue>> v = cache.get(DEFKEY);
+        cache.deleteKey(DEFKEY);
+        StoreStatus r = cache.cas(DEFKEY, byteVal("new value"), DEFTTL, v.get().getValue().getCasUnique(), DEFFLAG);
+        assertEquals(r, StoreStatus.NOT_FOUND);
     }
 
     @Test
