@@ -301,10 +301,11 @@ public class CacheImpl implements Cache {
         // found writeable item, acquire write lock
         lock.writeLock().lock();
         try {
+            long time = getCurrTime();
             // need to re-test item since it may have been removed or updated
             CacheValue newValue = cache.get(key);
             // need to check if it changed since we acquired the read lock
-            if (null == newValue || isExpired(newValue, getCurrTime())) { // check expired since may not have been reaped
+            if (null == newValue || isExpired(newValue, time)) { // check expired since may not have been reaped
                 return ResponseStatus.StoreStatus.NOT_FOUND;
             }
             else if (newValue.getCasUnique() != casUnique) {
@@ -317,7 +318,8 @@ public class CacheImpl implements Cache {
 
                 // notify listeners
                 eventListener.sendMessage(
-                        EventMessage.update(newStatsEntry(key, oldValue), newStatsEntry(key, newValue)));
+                    EventMessage.update(newStatsEntry(key, oldValue), newStatsEntry(key, newValue))
+                );
 
                 return ResponseStatus.StoreStatus.STORED;
             }
@@ -339,16 +341,37 @@ public class CacheImpl implements Cache {
      */
     @Override
     public ResponseStatus.StoreStatus set(String key, byte[] value, long ttl, long flag) {
+        // pre-empt attempting to store expired ttl
+        // note we can't do this in cas because we need the actual state for the response
+        long time = getCurrTime();
+        if (isExpired(ttl, getCurrTime())) {
+            logger.error("attempt to store item with expired ttl, client clock not synced? " + ttl + " < " + time);
+            return ResponseStatus.StoreStatus.NOT_STORED; // why store a cache item thats already expired!
+        }
+
         // acquire write lock
         lock.writeLock().lock();
         try {
+            // get the new time
+            time = getCurrTime();
+
+            // re-check ttl
+            if (isExpired(ttl, time)) {
+                logger.error("attempt to store item with expired ttl, client clock not synced? " + ttl + " < " + time);
+                return ResponseStatus.StoreStatus.NOT_STORED; // why store a cache item thats already expired!
+            }
+
             CacheValue newValue = newCacheValue(value, ttl, flag, casCounter.incrementAndGet());
             CacheValue oldValue = cache.put(key, newValue);
 
             // notify listeners
-            if (null == oldValue || isExpired(oldValue, getCurrTime())) {
+            if (null == oldValue) {
                 // we didn't have this key or it was expired (not reaped), it's an put
                 eventListener.sendMessage(EventMessage.put(newStatsEntry(key, newValue)));
+            }
+            else if (isExpired(oldValue, time)) {
+                eventListener.sendMessage(EventMessage.delete(newStatsEntry(key, oldValue)));
+                eventListener.sendMessage(EventMessage.put(newStatsEntry(key, oldValue)));
             }
             else {
                 // we didn't have this key, it's an update
@@ -373,11 +396,19 @@ public class CacheImpl implements Cache {
         return t + delta;
     }
 
-    protected boolean isExpired(CacheValue v) {
-        return CacheUtil.isExpired(v);
+    protected boolean isExpired(long ttl) {
+        return CacheUtil.isExpired(ttl, getCurrTime());
+    }
+
+    protected boolean isExpired(long ttl, long currTime) {
+        return CacheUtil.isExpired(ttl, currTime);
     }
 
     protected boolean isExpired(CacheValue v, long currTime) {
         return CacheUtil.isExpired(v, currTime);
+    }
+
+    protected boolean isExpired(CacheValue v) {
+        return CacheUtil.isExpired(v, getCurrTime());
     }
 }

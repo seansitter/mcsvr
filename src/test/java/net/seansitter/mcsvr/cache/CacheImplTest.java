@@ -109,7 +109,7 @@ public class CacheImplTest {
         Optional<CacheEntry<CacheValue>> v = cache.get(DEFKEY);
         cache.setRelTime(NOW+3);
         StoreStatus r = cache.cas(DEFKEY, byteVal("new value"), DEFTTL, v.get().getValue().getCasUnique(), DEFFLAG);
-        assertEquals(r, StoreStatus.NOT_FOUND);
+        assertEquals(StoreStatus.NOT_FOUND, r);
     }
 
     @Test
@@ -297,6 +297,7 @@ public class CacheImplTest {
         cache.set(DEFKEY+1, byteVal("1"), NOW+5, DEFFLAG);
         cache.set(DEFKEY+2, byteVal("2"), DEFTTL, DEFFLAG);
         cache.set(DEFKEY+3, byteVal("3"), NOW+20, DEFFLAG);
+        cache.set(DEFKEY+4, byteVal("4"), 5, DEFFLAG);
         cache.setRelTime(NOW+30);
 
         cache.newReaperTask().run();

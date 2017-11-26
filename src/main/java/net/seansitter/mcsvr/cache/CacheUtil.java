@@ -1,7 +1,7 @@
 package net.seansitter.mcsvr.cache;
 
 public class CacheUtil {
-    private static final int SECS_IN_30_DAYS = 60*60*24*30;
+    protected static final int SECS_IN_30_DAYS = 60*60*24*30;
 
     /**
      * Normalizes ttl per memcache protocol.
@@ -67,6 +67,23 @@ public class CacheUtil {
      */
     public static boolean isExpired(CacheValue value, long currTime) {
         return value.getExpiresAt() != 0 && value.getExpiresAt() < currTime;
+    }
+
+    /**
+     * Expired with a raw ttl
+     *
+     * @param ttl
+     * @param currTime
+     * @return
+     */
+    public static boolean isExpired(long ttl, long currTime) {
+        if (ttl <= SECS_IN_30_DAYS) return false;
+
+        return ttl < currTime;
+    }
+
+    public static boolean isExpired(long ttl) {
+        return isExpired(ttl, getCurrTime());
     }
 
     /**

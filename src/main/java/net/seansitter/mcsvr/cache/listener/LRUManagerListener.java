@@ -143,6 +143,14 @@ public class LRUManagerListener implements CacheEventListener {
             }
 
             currSz -= e.getValue().size;
+            lruMap.remove(e.getKey());
+
+            // removed the only key
+            if (lruList.head == lruList.tail && lruList.head == n) {
+                logger.info("removed the last key in the lru list, deleting list");
+                lruList = null;
+                return;
+            }
 
             // if n is head, point head to next
             if (lruList.head == n) {
@@ -163,8 +171,6 @@ public class LRUManagerListener implements CacheEventListener {
                 n.next.prev = n.prev;
                 n.prev = null;
             }
-
-            lruMap.remove(e.getKey());
         }
 
         /**
@@ -183,6 +189,7 @@ public class LRUManagerListener implements CacheEventListener {
             lruMap.put(e.getKey(), n);
 
             if (lruList == null) {
+                logger.info("creating a new lru list");
                 lruList = new LRUList();
                 lruList.head = lruList.tail = n;
             }
