@@ -22,9 +22,7 @@ import org.apache.commons.cli.CommandLine;
 
 import java.util.HashMap;
 import java.util.Map;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.*;
 import java.util.concurrent.locks.ReadWriteLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 
@@ -39,6 +37,7 @@ public class McServerConfig extends AbstractModule {
     private static final int DEFAULT_MAX_CACHE_BYTES = 0;
     private static final int DEFAULT_CLIENT_TO = 10;
     private static final int DEFAULT_SERVER_TO = 10;
+    private static final int DEFAULT_LRU_RECOVER_PCT = 20;
 
     public McServerConfig(String[] args) {
         this.args = args;
@@ -90,6 +89,9 @@ public class McServerConfig extends AbstractModule {
         bind(CacheMetricsJmxMBean.class).to(CacheMetricsJmx.class);
         bind(MCServerManagement.class);
 
+        bind(new TypeLiteral<BlockingQueue<EventMessage>>(){})
+                .annotatedWith(Names.named("lruProducerQueue"))
+                .to(new TypeLiteral<LinkedBlockingQueue<EventMessage>>(){});
     }
 
     @Provides
@@ -139,6 +141,7 @@ public class McServerConfig extends AbstractModule {
         opts.addOption("reapInterval", true, "number of seconds between reaper sweeps");
         opts.addOption("idleTimeout", true, "number of seconds before idle connection is closed");
         opts.addOption("serverTimeout", true, "number of seconds before server response times out");
+        opts.addOption("lruRecoverPct", true, "percent of max size to recover on lru sweep");
         opts.addOption("disableReaper", false, "disables expired item reaper");
         return opts;
     }
@@ -176,6 +179,13 @@ public class McServerConfig extends AbstractModule {
     Integer provideServerTimeout(CommandLine cmdLine) {
         return cmdLine.hasOption("serverTimeout") ?
                 Integer.parseInt(cmdLine.getOptionValue("serverTimeout")) : DEFAULT_SERVER_TO;
+    }
+
+    @Provides
+    @Named("lruRecoverPct")
+    Integer provideLruRecoverPct(CommandLine cmdLine) {
+        return cmdLine.hasOption("lruRecoverPct") ?
+                Integer.parseInt(cmdLine.getOptionValue("lruRecoverPct")) : DEFAULT_LRU_RECOVER_PCT;
     }
 
     @Provides

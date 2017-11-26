@@ -21,14 +21,18 @@ import java.util.concurrent.LinkedBlockingQueue;
 public class LRUManagerListener implements CacheEventListener {
     private final Logger logger = LoggerFactory.getLogger(CacheMetricsListener.class);
 
-    @Inject
-    public LRUManagerListener(Cache cache, @Named("maxCacheBytes") int maxCacheBytes) {
-        consumer = new LRUManager(cache, queue, maxCacheBytes);
-    }
-
     private LRUManager consumer; // consumes cache events via blocking queue
     private volatile boolean startedConsumer; // flag needs to be volatile for visibility
-    private final BlockingQueue<EventMessage> queue = new LinkedBlockingQueue<>(); // blocking queue for consumer
+    private final BlockingQueue<EventMessage> queue; // blocking queue for consumer
+
+    @Inject
+    public LRUManagerListener(Cache cache,
+                              @Named("lruProducerQueue") BlockingQueue<EventMessage> queue,
+                              @Named("maxCacheBytes") int maxCacheBytes,
+                              @Named("lruRecoverPct") int lruRecoverPct) {
+        this.queue = queue;
+        consumer = new LRUManager(cache, queue, maxCacheBytes, lruRecoverPct);
+    }
 
     @Override
     public void sendMessage(EventMessage message) {
@@ -38,12 +42,23 @@ public class LRUManagerListener implements CacheEventListener {
             // we couldn't add an item to the queue, it must be full!
             logger.error("failed to send message to LRU consumer - full queue?");
         }
+        logger.debug("got here");
+    }
+
+    // for testing
+    protected LRUManager getLruManager() {
+        return consumer;
+    }
+
+    // for testing
+    protected void setLruManager(LRUManager lruManager) {
+        consumer = lruManager;
     }
 
     /**
      * Start the lru consumer thread on demand
      */
-    private void lazyStartConsumer() {
+    protected void lazyStartConsumer() {
         if (!startedConsumer) { // double check optimization avoids unnecessary lock
             synchronized (this) {
                 if (!startedConsumer) {
@@ -60,21 +75,24 @@ public class LRUManagerListener implements CacheEventListener {
      *
      * We don't need synchronization here because all operations happen on the same thread!
      */
-    public static class LRUManager implements CacheEventListener {
+    protected static class LRUManager implements CacheEventListener {
         private final Logger logger = LoggerFactory.getLogger(LRUManager.class);
 
         private final BlockingQueue<EventMessage> queue; // serialize all events through queue
         private final Cache cache; // so we can order cleanup
-        private final int maxSz;
+        private int maxSz;
         private final HashMap<String, LRUNode> lruMap = new HashMap<>(); // we want node lookup to be O(1)
         private LRUList lruList; // head of the lease is mru, tail is lru
 
         private long currSz = 0;
 
-        protected LRUManager(Cache cache, BlockingQueue queue, int maxSz) {
+        private int lruRecoverPct;
+
+        protected LRUManager(Cache cache, BlockingQueue queue, int maxSz, int lruRecoverPct) {
             this.queue = queue;
             this.cache = cache;
             this.maxSz = maxSz;
+            this.lruRecoverPct = lruRecoverPct;
         }
 
         protected void start() {
@@ -89,6 +107,10 @@ public class LRUManagerListener implements CacheEventListener {
                     }
                 }
             }, "lru-manager-thread").start();
+        }
+
+        private long lruRecoverSz() {
+            return (long)Math.floor(maxSz * ((float)lruRecoverPct/100));
         }
 
         @Override
@@ -185,8 +207,10 @@ public class LRUManagerListener implements CacheEventListener {
         protected void cleanupLru() {
             // check size < max
             if (currSz > maxSz) {
-                long recoverSz = currSz - maxSz;
-                logger.info("cache size is "+currSz+" bytes, over-size by "+recoverSz+" bytes, attempting to recover");
+                long overSz = currSz - maxSz;
+                long recoverSz = lruRecoverSz();
+                logger.info("cache size is " + currSz + " bytes, over-size by " + overSz + " bytes, attempting to recover " +
+                        recoverSz + " bytes (" + lruRecoverPct + "%)");
                 // advise cache to destroy lru nodes up to maxSz
                 cache.destroyKeys(findLruNodes(recoverSz));
             }
@@ -231,6 +255,10 @@ public class LRUManagerListener implements CacheEventListener {
                 return;
             }
 
+            // need to update the stats since this could be update or get
+            // note - sort of a hack
+            n.cacheStats = new CacheValueStats(e.getValue().createdAt, e.getValue().expiresAt, e.getValue().size);
+
             // if we're not already the head
             if (lruList.head != n) {
                 if (lruList.tail == n) {
@@ -249,29 +277,45 @@ public class LRUManagerListener implements CacheEventListener {
             }
         }
 
-        protected LRUList getLRUList() {
-            return lruList;
-        }
-
         /**
          * The tail of the lru list is the least recently used cache item, head is most recently used
          */
         protected class LRUList {
-            private LRUNode tail = null; // tail is least recently used
-            private LRUNode head = null; // head is most recently used
+            protected LRUNode tail = null; // tail is least recently used
+            protected LRUNode head = null; // head is most recently used
         }
 
         protected class LRUNode {
-            private final String key;
-            private final CacheValueStats cacheStats;
+            protected final String key;
+            protected CacheValueStats cacheStats;
 
-            private LRUNode prev;
-            private LRUNode next;
+            protected LRUNode prev;
+            protected LRUNode next;
 
-            private LRUNode(String key, CacheValueStats cacheStats) {
+            protected LRUNode(String key, CacheValueStats cacheStats) {
                 this.key = key;
                 this.cacheStats = cacheStats;
             }
+        }
+
+        /**
+         * BEGIN METHODS FOR TESTING
+         */
+
+        protected long currSize() {
+            return currSz;
+        }
+
+        protected LRUList getLRUList() {
+            return lruList;
+        }
+
+        protected void setMaxSz(int maxSz) {
+            this.maxSz = maxSz;
+        }
+
+        protected void setLruRecoverPct(int pct) {
+            this.lruRecoverPct = pct;
         }
     }
 }

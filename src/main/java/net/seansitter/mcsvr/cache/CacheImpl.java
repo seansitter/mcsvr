@@ -137,7 +137,7 @@ public class CacheImpl implements Cache {
             }
 
             cache.remove(key); // actually remove the item
-            sendListenerMessage(Event.DELETE_ENTRY, new CacheEntry<CacheValueStats>(key, value.getStats()));
+            eventListener.sendMessage(EventMessage.delete(newStatsEntry(key, value)));
 
             return ResponseStatus.DeleteStatus.DELETED;
         }
@@ -209,12 +209,12 @@ public class CacheImpl implements Cache {
            if (null == value ||
                    (value.getExpiresAt() > 0 && getCurrTime() > value.getExpiresAt())) // optimization in case expired
            {
-               eventListener.sendMessage(EventMessage.newEventMessage(Event.CACHE_MISS, key));
+               eventListener.sendMessage(EventMessage.cacheMiss(key));
                return Optional.empty();
            }
 
            CacheEntry<CacheValue> entry = new CacheEntry<>(key, value);
-           eventListener.sendMessage(EventMessage.newEventMessage(Event.CACHE_HIT, newStatsEntry(key, value)));
+           eventListener.sendMessage(EventMessage.cacheHit(newStatsEntry(key, value)));
 
            return Optional.of(entry);
        }
@@ -297,14 +297,8 @@ public class CacheImpl implements Cache {
                 CacheValue oldValue = cache.put(key, newValue);
 
                 // notify listeners
-                sendListenerMessage(
-                        Event.UPDATE_ENTRY,
-                        new UpdateEntryMessage(
-                                newStatsEntry(key, oldValue),
-                                newStatsEntry(key, newValue),
-                                newValue.getSize() - oldValue.getSize()
-                        )
-                );
+                eventListener.sendMessage(
+                        EventMessage.update(newStatsEntry(key, oldValue), newStatsEntry(key, newValue)));
 
                 return ResponseStatus.StoreStatus.STORED;
             }
@@ -338,18 +332,12 @@ public class CacheImpl implements Cache {
             // notify listeners
             if (null == oldValue || isExpired(oldValue)) {
                 // we didn't have this key or it was expired (not reaped), it's an put
-                sendListenerMessage(Event.PUT_ENTRY, newStatsEntry(key, newValue));
+                eventListener.sendMessage(EventMessage.put(newStatsEntry(key, newValue)));
             }
             else {
                 // we didn't have this key, it's an update
-                sendListenerMessage(
-                        Event.UPDATE_ENTRY,
-                        new UpdateEntryMessage(
-                                newStatsEntry(key, oldValue),
-                                newStatsEntry(key, newValue),
-                                newValue.getSize() - oldValue.getSize()
-                        )
-                );
+                eventListener.sendMessage(
+                        EventMessage.update(newStatsEntry(key, oldValue), newStatsEntry(key, newValue)));
             }
         }
         finally {
@@ -401,16 +389,6 @@ public class CacheImpl implements Cache {
      */
     private long getCurrTime() {
         return System.currentTimeMillis() / 1000;
-    }
-
-    /**
-     * Sends an event to listener
-     *
-     * @param event
-     * @param data
-     */
-    private void sendListenerMessage(Event event, Object data) {
-        eventListener.sendMessage(EventMessage.newEventMessage(event, data));
     }
 
     /**
