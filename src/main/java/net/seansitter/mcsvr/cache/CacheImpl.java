@@ -75,7 +75,7 @@ public class CacheImpl implements Cache {
     private void scheduleCleanup() {
         logger.info("scheduling reaper thread every "+reapInterval+" seconds");
         schedExecutor.scheduleAtFixedRate(
-                newCleanupTask(),
+                newReaperTask(),
                 reapInterval * 1000,
                 reapInterval * 1000,
                 TimeUnit.MILLISECONDS);
@@ -86,7 +86,7 @@ public class CacheImpl implements Cache {
      *
      * @return
      */
-    protected Runnable newCleanupTask() {
+    protected Runnable newReaperTask() {
         return () -> {
             // so we have a consistent time for the duration of the sweep
             long currTime = getCurrTime();

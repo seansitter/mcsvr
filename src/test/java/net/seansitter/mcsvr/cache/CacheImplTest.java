@@ -1,5 +1,7 @@
 package net.seansitter.mcsvr.cache;
 
+import io.netty.buffer.ByteBuf;
+import io.netty.buffer.Unpooled;
 import io.netty.util.CharsetUtil;
 import net.seansitter.mcsvr.cache.listener.CacheEventListener;
 import net.seansitter.mcsvr.cache.listener.EventMessage;
@@ -72,7 +74,9 @@ public class CacheImplTest {
 
     @Test
     public void testSetGet() {
-        cache.set(DEFKEY, DEFVAL_B, DEFTTL, DEFFLAG);
+        StoreStatus s = cache.set(DEFKEY, DEFVAL_B, DEFTTL, DEFFLAG);
+        assertEquals(s, StoreStatus.STORED);
+
         Optional<CacheEntry<CacheValue>> res = cache.get(DEFKEY);
 
         assertTrue("got an entry back", res.isPresent());
@@ -276,10 +280,34 @@ public class CacheImplTest {
         verify(writeLock, times(1)).unlock();
     }
 
+    @Test
+    public void testNonString() {
+        byte[] v = new byte[4];
+        Unpooled.buffer().writeInt(42).readBytes(v);
+        cache.set(DEFKEY, v, DEFTTL, DEFFLAG);
+        CacheEntry<CacheValue> cv = cache.get(DEFKEY).get();
+        ByteBuf retBuf = Unpooled.wrappedBuffer(cv.getValue().getPayload());
+        assertEquals(42, retBuf.readInt());
+    }
+
     // TESTING REAPER
 
+    @Test
+    public void testReaperTwo() {
+        cache.set(DEFKEY+1, byteVal("1"), NOW+5, DEFFLAG);
+        cache.set(DEFKEY+2, byteVal("2"), DEFTTL, DEFFLAG);
+        cache.set(DEFKEY+3, byteVal("3"), NOW+20, DEFFLAG);
+        cache.setRelTime(NOW+30);
+
+        cache.newReaperTask().run();
+
+        assertFalse(cache.get(DEFKEY+1).isPresent());
+        assertFalse(cache.get(DEFKEY+3).isPresent());
+        assertTrue(cache.get(DEFKEY+2).isPresent());
+    }
 
     // TESTING EXPIRATION
+
     @Test
     public void testZeroExpiration() throws InterruptedException {
         cache.set(DEFKEY, DEFVAL_B, 0, 15);
