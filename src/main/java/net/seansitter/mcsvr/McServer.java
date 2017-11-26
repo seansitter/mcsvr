@@ -1,7 +1,5 @@
 package net.seansitter.mcsvr;
 
-import com.google.inject.Guice;
-import com.google.inject.Injector;
 import com.google.inject.Provider;
 import com.google.inject.name.Named;
 import io.netty.bootstrap.ServerBootstrap;
@@ -11,55 +9,14 @@ import io.netty.channel.socket.SocketChannel;
 import io.netty.channel.socket.nio.NioServerSocketChannel;
 import io.netty.handler.timeout.IdleStateHandler;
 import net.seansitter.mcsvr.cache.Cache;
-import net.seansitter.mcsvr.jmx.MCServerManagement;
-import org.apache.commons.cli.CommandLine;
-import org.apache.commons.cli.HelpFormatter;
-import org.apache.commons.cli.Options;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.inject.Inject;
-import javax.management.InstanceAlreadyExistsException;
-import javax.management.MBeanRegistrationException;
-import javax.management.MalformedObjectNameException;
-import javax.management.NotCompliantMBeanException;
 import java.net.InetSocketAddress;
 
 public class McServer {
     private final Logger logger = LoggerFactory.getLogger(McServer.class);
-
-    public static void main(String[] args) {
-        Logger logger = LoggerFactory.getLogger(McServer.class);
-
-        Injector injector = Guice.createInjector(new McServerConfig(args));
-        CommandLine cmdLn = injector.getInstance(CommandLine.class);
-
-        if (cmdLn.hasOption("help")) {
-            new HelpFormatter().printHelp("mcsvr", injector.getInstance(Options.class));
-            System.exit(0);
-        }
-
-        try {
-            injector.getInstance(MCServerManagement.class).start();
-        } catch (MalformedObjectNameException e) {
-            e.printStackTrace();
-        } catch (NotCompliantMBeanException e) {
-            e.printStackTrace();
-        } catch (InstanceAlreadyExistsException e) {
-            e.printStackTrace();
-        } catch (MBeanRegistrationException e) {
-            e.printStackTrace();
-        }
-
-        try {
-            logger.info("starting memcache server");
-            McServer mcServer = injector.getInstance(McServer.class);
-            mcServer.start();
-        }
-        catch (Exception e) {
-            logger.error("failed to start server: ", e);
-        }
-    }
 
     private final Cache cache;
     private final int port;

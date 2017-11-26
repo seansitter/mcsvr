@@ -9,6 +9,8 @@ import net.seansitter.mcsvr.domain.result.ErrorResult;
 import net.seansitter.mcsvr.exception.ClientException;
 import net.seansitter.mcsvr.exception.InvalidCommandException;
 import org.apache.commons.lang3.exception.ExceptionUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import static net.seansitter.mcsvr.cache.ResponseStatus.ErrorStatus;
 
@@ -16,6 +18,8 @@ import static net.seansitter.mcsvr.cache.ResponseStatus.ErrorStatus;
  * Exceptions in the pipeline will be handler here
  */
 public class InBoundErrorHandler extends ChannelInboundHandlerAdapter {
+    private final Logger logger = LoggerFactory.getLogger(InBoundErrorHandler.class);
+
     @Override
     public void exceptionCaught(ChannelHandlerContext ctx, Throwable cause) {
         if (ExceptionUtils.indexOfThrowable(cause, InvalidCommandException.class) >= 0) {
@@ -28,9 +32,8 @@ public class InBoundErrorHandler extends ChannelInboundHandlerAdapter {
         else { // all other exceptions are server exceptions
             // not sure what is appropriate reason here
             ctx.write(new ErrorResult(ErrorStatus.SERVER_ERROR, "the server encountered an error"));
+            logger.error("received a server error", cause);
         }
-
-        cause.printStackTrace();
 
         // always close connection on error
         ctx.close();
