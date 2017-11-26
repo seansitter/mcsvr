@@ -142,7 +142,6 @@ public class McServerConfig extends AbstractModule {
         opts.addOption("idleTimeout", true, "number of seconds before idle connection is closed");
         opts.addOption("serverTimeout", true, "number of seconds before server response times out");
         opts.addOption("lruRecoverPct", true, "percent of max size to recover on lru sweep");
-        opts.addOption("disableReaper", false, "disables expired item reaper");
         return opts;
     }
 
@@ -186,11 +185,5 @@ public class McServerConfig extends AbstractModule {
     Integer provideLruRecoverPct(CommandLine cmdLine) {
         return cmdLine.hasOption("lruRecoverPct") ?
                 Integer.parseInt(cmdLine.getOptionValue("lruRecoverPct")) : DEFAULT_LRU_RECOVER_PCT;
-    }
-
-    @Provides
-    @Named("disableReaper")
-    Boolean provideDisableReaper(CommandLine cmdLine) {
-        return cmdLine.hasOption("disableReaper");
     }
 }

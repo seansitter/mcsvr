@@ -28,14 +28,12 @@ public class CacheImpl implements Cache {
     private final ReadWriteLock lock; // in non-test this needs to be reentrant
     private final CacheEventListener eventListener;
     private final ScheduledExecutorService schedExecutor; // executor for the reaper
-    private final boolean disableReaper;
 
     @Inject
     public CacheImpl(@Named("cache") Map<String, CacheValue> cache,
                      @Named("reapInterval") Integer reapInterval,
                      @Named("cacheLock") ReadWriteLock lock,
                      @Named("cacheCleanup") ScheduledExecutorService schedExecutor,
-                     @Named("disableReaper") boolean disableReaper,
                      CacheEventListener eventListener) {
         this.cache = cache;
         this.reapInterval = reapInterval;
@@ -45,7 +43,6 @@ public class CacheImpl implements Cache {
         this.lock = lock;
         this.schedExecutor = schedExecutor;
         this.eventListener = eventListener;
-        this.disableReaper = disableReaper;
         this.casCounter = new AtomicLong(0);
     }
 
@@ -53,7 +50,7 @@ public class CacheImpl implements Cache {
      * Starts asynchronous work
      */
     public void start() {
-        if (!disableReaper) {
+        if (reapInterval > 0) {
             logger.info("starting reaper...");
             scheduleCleanup();
         }
