@@ -9,7 +9,7 @@ public class StoreCacheResult implements StatusCacheResult {
         this.status = status;
     }
 
-    private final ResponseStatus.StoreStatus getStatus() {
+    public ResponseStatus.StoreStatus getStatus() {
         return status;
     }
 

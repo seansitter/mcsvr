@@ -31,6 +31,9 @@ public class ApiCacheCommandExecutorImpl implements ApiCacheCommandExecutor {
         else if (command.getName().equals("delete")) {
             return executeDeleteCommand((DeleteCommand)command);
         }
+        else if (command.getName().equals("cas")) {
+            return executeCasCommand((StoreCommand)command);
+        }
         return null;
     }
 
@@ -44,6 +47,10 @@ public class ApiCacheCommandExecutorImpl implements ApiCacheCommandExecutor {
 
     private CacheResult executeSetCommand(StoreCommand c) {
         return new StoreCacheResult(cache.set(c.getKey(), c.getPayload(), c.getExpTime(), c.getFlags()));
+    }
+
+    private CacheResult executeCasCommand(StoreCommand c) {
+        return new StoreCacheResult(cache.cas(c.getKey(), c.getPayload(), c.getExpTime(), c.getCasUnique(), c.getFlags()));
     }
 
     private CacheResult executeDeleteCommand(DeleteCommand c) {
