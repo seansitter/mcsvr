@@ -1,6 +1,6 @@
 package net.seansitter.mcsvr.domain.command;
 
-public interface ApiCommand extends Command {
+public interface ApiCommand {
     String getName();
     boolean isNoReply();
 }

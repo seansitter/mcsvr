@@ -42,6 +42,13 @@ public class McTextDecoder extends ByteToMessageDecoder {
         doDecode(in, out);
     }
 
+    /**
+     * Decodes everything currently in the buffer. Leaves whatever is un-decodeable as unread
+     * in the buffer, per netty decoder spec.
+     *
+     * @param in
+     * @param out
+     */
     protected void doDecode(ByteBuf in, List<Object> out) {
         Object outObj;
         // we might have multiple full commands in the buffer to decode
@@ -50,6 +57,12 @@ public class McTextDecoder extends ByteToMessageDecoder {
         }
     }
 
+    /**
+     * Decodes a single command (text and payload)
+     *
+     * @param in
+     * @return
+     */
     private Object doDecodeSingle(ByteBuf in) {
         if (null == cmdLineObjs) {
             cmdLineObjs = parseCommand(in);
@@ -79,10 +92,12 @@ public class McTextDecoder extends ByteToMessageDecoder {
         return null;
     }
 
-    private void reset() {
-        cmdLineObjs = null;
-    }
-
+    /**
+     * Parses a single command text line
+     *
+     * @param in
+     * @return
+     */
     private Object[] parseCommand(ByteBuf in) {
         int rIdx = in.readerIndex();
         int endLnIdx = -1;
@@ -134,6 +149,19 @@ public class McTextDecoder extends ByteToMessageDecoder {
         }
     }
 
+    /**
+     * Since the decoder will be reused after parsing a single command, reset the state
+     */
+    private void reset() {
+        cmdLineObjs = null;
+    }
+
+    /**
+     * Rewrites command array with proper types for a cas call
+     *
+     * @param arr
+     * @return
+     */
     private Object[] toCasArr(String[] arr) {
         Object[] ret = new Object[arr.length];
         ret[0] = arr[0];
@@ -148,6 +176,12 @@ public class McTextDecoder extends ByteToMessageDecoder {
         return ret;
     }
 
+    /**
+     * Rewrites command array with proper types for a store call
+     *
+     * @param arr
+     * @return
+     */
     private Object[] toStoreArr(String[] arr) {
         Object[] ret = new Object[arr.length];
         ret[0] = arr[0];
@@ -161,6 +195,13 @@ public class McTextDecoder extends ByteToMessageDecoder {
         return ret;
     }
 
+    /**
+     * Returns an instance of a command object from text array and payload (where applicable)
+     *
+     * @param cmdLineObjs
+     * @param payload
+     * @return
+     */
     private ApiCommand cmdLineObjsToCmd(Object[] cmdLineObjs, byte[] payload) {
         String cmd = (String)cmdLineObjs[0];
 

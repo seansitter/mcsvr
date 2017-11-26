@@ -9,15 +9,20 @@ import net.seansitter.mcsvr.domain.result.CacheResult;
 import javax.inject.Inject;
 import java.util.concurrent.ExecutorService;
 
+/**
+ * This class executes decoded commands and sends the response (unless noreply)
+ */
 public class CommandHandler extends SimpleChannelInboundHandler<ApiCommand> {
 
-    private final ExecutorService executorService;
+    // executes the command against the cache
     private final ApiCacheCommandExecutor commandExecutor;
+    // calls commandExecutor.execute() on a new thread
+    private final ExecutorService executorService;
 
     @Inject
     public CommandHandler(@Named("cmdSnglThrdExec") ExecutorService executorService, ApiCacheCommandExecutor commandExecutor){
         // This will be a Executors.newSingleThreadExecutor()
-        // This is cheating a bit, as its probably not the most efficient to create a new executor for every new instance
+        // This is cheating a bit, as its probably not efficient to create a new executor for every new instance
         // of this class, but THE MOST IMPORTANT THING is that for a given client, all operations are ordered for the
         // client connection. It would certainly be more efficient to have a thread pool which would cache threads
         // and where we could obtain a lease on a thread for the duration of a request. That way we would not be spinning

@@ -5,6 +5,9 @@ import net.seansitter.mcsvr.cache.CacheMetrics;
 import javax.inject.Inject;
 import javax.inject.Named;
 
+/**
+ * This is a mbean cache metrics wrapper to enable jmx support
+ */
 public class CacheMetricsJmx implements CacheMetricsJmxMBean {
     private final CacheMetrics cacheMetrics;
 

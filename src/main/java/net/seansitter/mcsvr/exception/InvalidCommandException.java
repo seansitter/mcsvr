@@ -1,8 +1,9 @@
 package net.seansitter.mcsvr.exception;
 
+/**
+ * Exception class thrown when client provides invalid command
+ */
 public class InvalidCommandException extends RuntimeException {
-
-    private static final long serialVersionUID = -1464830400709348473L;
 
     /**
      * Creates a new instance.
