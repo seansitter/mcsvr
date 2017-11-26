@@ -123,7 +123,7 @@ public class McTextDecoderTest {
         assertEquals("command is set", "set", c.getName());
         assertEquals("set flag", 2, c.getFlags());
         assertEquals("set expiration", 5, c.getExpTime());
-        assertEquals("set bytelen", byteLen(v), c.getContentLen());
+        assertEquals("set bytelen", byteLen(v), c.getPayloadLen());
         assertFalse("set is not noreply", c.isNoReply());
     }
 
@@ -194,7 +194,7 @@ public class McTextDecoderTest {
         assertEquals("command is cas", "cas", c.getName());
         assertEquals("cas flag", 2, c.getFlags());
         assertEquals("cas expiration", 5, c.getExpTime());
-        assertEquals("cas bytelen", byteLen(v), c.getContentLen());
+        assertEquals("cas bytelen", byteLen(v), c.getPayloadLen());
         assertEquals("cas unique value", 21, c.getCasUnique());
         assertFalse("cas is not noreply", c.isNoReply());
     }

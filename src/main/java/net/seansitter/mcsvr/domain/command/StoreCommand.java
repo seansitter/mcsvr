@@ -1,10 +1,13 @@
 package net.seansitter.mcsvr.domain.command;
 
+/**
+ * Represents a set/cas text command
+ */
 public class StoreCommand implements ApiCommand {
     private final String name;
     private final String key;
     private final byte[] payload;
-    private final int contentLen;
+    private final int payloadLen;
     private final int flags; // protocol requires 16 bit unsigned, unsigned not available in java < 8
     private final long expTime;
     private final long casUnique;
@@ -13,7 +16,7 @@ public class StoreCommand implements ApiCommand {
     private StoreCommand(String name, String key, int flags, long expTime, long casUnique, boolean isNoReply, byte[] payload) {
         this.name = name;
         this.key = key;
-        this.contentLen = payload.length;
+        this.payloadLen = payload.length;
         this.flags = flags;
         this.expTime = expTime;
         this.casUnique = casUnique;
@@ -34,8 +37,8 @@ public class StoreCommand implements ApiCommand {
         return payload;
     }
 
-    public int getContentLen() {
-        return contentLen;
+    public int getPayloadLen() {
+        return payloadLen;
     }
 
     public int getFlags() {

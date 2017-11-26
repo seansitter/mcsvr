@@ -1,5 +1,8 @@
 package net.seansitter.mcsvr.cache;
 
+/**
+ * Represents a value in the cache
+ */
 public class CacheValue {
     private final byte[] payload;
     private final long flag;
@@ -9,7 +12,7 @@ public class CacheValue {
     public CacheValue(byte[] payload, long flag, long createdAt, long expiresAt, long casUnique) {
         this.payload = payload;
         this.flag = flag;
-        this.casUnique = casUnique;
+        this.casUnique = casUnique; // unique value assigned by the cache for cas operations
         this.stats = new CacheValueStats(createdAt, expiresAt, payload.length);
     }
 

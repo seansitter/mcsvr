@@ -14,6 +14,9 @@ import java.util.concurrent.atomic.AtomicLong;
 import java.util.concurrent.locks.ReadWriteLock;
 import java.util.stream.Collectors;
 
+/**
+ * The implementation of the actual cache
+ */
 public class CacheImpl implements Cache {
     private final Logger logger = LoggerFactory.getLogger(CacheImpl.class);
 

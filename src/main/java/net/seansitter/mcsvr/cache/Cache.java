@@ -3,6 +3,9 @@ package net.seansitter.mcsvr.cache;
 import java.util.List;
 import java.util.Optional;
 
+/**
+ * Interface for the actual cache
+ */
 public interface Cache {
     // starts the cache (thread reaper, etc)
     void start();

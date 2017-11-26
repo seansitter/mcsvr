@@ -1,5 +1,8 @@
 package net.seansitter.mcsvr.domain.command;
 
+/**
+ * Represents a delete text command
+ */
 public class DeleteCommand implements ApiCommand {
     public static final String name = "delete";
 

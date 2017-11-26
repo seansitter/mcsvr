@@ -1,5 +1,8 @@
 package net.seansitter.mcsvr.cache;
 
+/**
+ * Stats for a single cache value
+ */
 public class CacheValueStats {
     public final long createdAt;
     public final long expiresAt;

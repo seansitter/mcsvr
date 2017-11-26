@@ -4,6 +4,9 @@ import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
 
+/**
+ * Represents a get/gets text command
+ */
 public class GetCommand implements ApiCommand {
     private final String name;
     private final List<String> keys;
