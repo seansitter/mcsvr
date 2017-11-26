@@ -26,4 +26,27 @@ public class CacheEntry<T> {
     public T getValue() {
         return value;
     }
+
+    @Override
+    public boolean equals(Object o) {
+        if (!(o instanceof CacheEntry)) {
+            return false;
+        }
+
+        CacheEntry v = (CacheEntry)o;
+        if (key != null && v.key == null) {
+            return false;
+        }
+        if (key != null && !key.equals(v.key)) {
+            return false;
+        }
+        if (value != null && v.value == null) {
+            return false;
+        }
+        if (value != null && !value.equals(v.value)) {
+            return false;
+        }
+
+        return true;
+    }
 }

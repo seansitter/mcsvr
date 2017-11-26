@@ -13,4 +13,30 @@ public class UpdateEntryMessage {
         this.newEntry = newEntry;
         this.szChange = szChange;
     }
+
+    @Override
+    public boolean equals(Object o) {
+        if (!(o instanceof UpdateEntryMessage)) {
+            return false;
+        }
+
+        UpdateEntryMessage v = (UpdateEntryMessage)o;
+        if (v.szChange != szChange) {
+            return false;
+        }
+        if (oldEntry != null && v.oldEntry == null) {
+            return false;
+        }
+        if (v.oldEntry != null && !v.oldEntry.equals(v.oldEntry)) {
+            return false;
+        }
+        if (newEntry != null && v.newEntry == null) {
+            return false;
+        }
+        if (v.newEntry != null && !v.newEntry.equals(v.newEntry)) {
+            return false;
+        }
+
+        return true;
+    }
 }

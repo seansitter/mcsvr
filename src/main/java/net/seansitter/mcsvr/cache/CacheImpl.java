@@ -14,13 +14,13 @@ import java.util.concurrent.atomic.AtomicLong;
 import java.util.concurrent.locks.ReadWriteLock;
 import java.util.stream.Collectors;
 
+import static net.seansitter.mcsvr.cache.CacheUtil.*;
+
 /**
  * The implementation of the actual cache
  */
 public class CacheImpl implements Cache {
     private final Logger logger = LoggerFactory.getLogger(CacheImpl.class);
-
-    private static final int SECS_IN_30_DAYS = 60*60*24*30;
 
     private final Map<String, CacheValue> cache; // the backing cache
     private final int reapInterval; // thread reaper interval in seconds
@@ -28,6 +28,7 @@ public class CacheImpl implements Cache {
     private final ReadWriteLock lock; // in non-test this needs to be reentrant
     private final CacheEventListener eventListener;
     private final ScheduledExecutorService schedExecutor; // executor for the reaper
+    private long relTime = 0;
 
     @Inject
     public CacheImpl(@Named("cache") Map<String, CacheValue> cache,
@@ -44,6 +45,15 @@ public class CacheImpl implements Cache {
         this.schedExecutor = schedExecutor;
         this.eventListener = eventListener;
         this.casCounter = new AtomicLong(0);
+    }
+
+    /**
+     * This allows us to synchronize the time for testing
+     *
+     * @param relTime
+     */
+    protected void setRelTime(long relTime) {
+        this.relTime = relTime;
     }
 
     /**
@@ -78,16 +88,16 @@ public class CacheImpl implements Cache {
      */
     protected Runnable newCleanupTask() {
         return () -> {
+            // so we have a consistent time for the duration of the sweep
             long currTime = getCurrTime();
-            logger.info("running reaper at: "+currTime);
+            logger.info("running reaper at: " + currTime);
 
             // first generate the list of expired keys with a read lock
             LinkedList<String> expKeys = new LinkedList<>();
             lock.readLock().lock();
             try {
                 cache.forEach((k, v) -> {
-                    // need to recheck since it could have gone away
-                    if (v.getExpiresAt() < currTime) {
+                    if (isExpired(v, currTime)) {
                         expKeys.add(k);
                     }
                 });
@@ -121,7 +131,7 @@ public class CacheImpl implements Cache {
         lock.readLock().lock();
         try {
             CacheValue value = cache.get(key);
-            if (null == value) {
+            if (null == value || isExpired(value, getCurrTime())) { // reaper will get it if expired
                 return ResponseStatus.DeleteStatus.NOT_FOUND; // no key
             }
         }
@@ -189,14 +199,7 @@ public class CacheImpl implements Cache {
         return Collections.unmodifiableList(deletedEntries);
     }
 
-    /**
-     * Gets a single key from the cache
-     *
-     * @param key
-     * @return
-     */
-    @Override
-    public Optional<CacheEntry<CacheValue>> get(String key) {
+    public Optional<CacheEntry<CacheValue>> get(String key, long currTime) {
         // pre-empt taking a read lock
         if (null == key) {
             return Optional.empty();
@@ -206,9 +209,7 @@ public class CacheImpl implements Cache {
        lock.readLock().lock();
        try {
            CacheValue value = cache.get(key);
-           if (null == value ||
-                   (value.getExpiresAt() > 0 && getCurrTime() > value.getExpiresAt())) // optimization in case expired
-           {
+           if (null == value || isExpired(value, currTime)) { // if its expired, reaper will handle it
                eventListener.sendMessage(EventMessage.cacheMiss(key));
                return Optional.empty();
            }
@@ -224,6 +225,17 @@ public class CacheImpl implements Cache {
     }
 
     /**
+     * Gets a single key from the cache
+     *
+     * @param key
+     * @return
+     */
+    @Override
+    public Optional<CacheEntry<CacheValue>> get(String key) {
+        return get(key, getCurrTime());
+    }
+
+    /**
      * Bulk gets values from the cache
      *
      * @param keys list of keys to get
@@ -236,12 +248,15 @@ public class CacheImpl implements Cache {
             return new LinkedList<>();
         }
 
+        // so we have a consistent time for each get expiration check
+        long currTime = getCurrTime();
+
         // acquire read lock
         lock.readLock().lock();
         try {
              return keys
                      .stream()
-                     .map(k -> get(k))
+                     .map(k -> get(k, currTime))
                      .filter(v -> v.isPresent())
                      .map(v -> v.get())
                      .collect(Collectors.toList());
@@ -289,11 +304,11 @@ public class CacheImpl implements Cache {
             // need to re-test item since it may have been removed or updated
             CacheValue newValue = cache.get(key);
             // need to check if it changed since we acquired the read lock
-            if (null == newValue || isExpired(newValue)) { // check expired since may not have been reaped
+            if (null == newValue || isExpired(newValue, getCurrTime())) { // check expired since may not have been reaped
                 return ResponseStatus.StoreStatus.NOT_FOUND;
             }
             else if (newValue.getCasUnique() == casUnique) {
-                newValue = newCacheValue(value, ttl, flag);
+                newValue = newCacheValue(value, ttl, flag, casCounter.incrementAndGet());
                 CacheValue oldValue = cache.put(key, newValue);
 
                 // notify listeners
@@ -326,11 +341,11 @@ public class CacheImpl implements Cache {
         // acquire write lock
         lock.writeLock().lock();
         try {
-            CacheValue newValue = newCacheValue(value, ttl, flag);
+            CacheValue newValue = newCacheValue(value, ttl, flag, casCounter.incrementAndGet());
             CacheValue oldValue = cache.put(key, newValue);
 
             // notify listeners
-            if (null == oldValue || isExpired(oldValue)) {
+            if (null == oldValue || isExpired(oldValue, getCurrTime())) {
                 // we didn't have this key or it was expired (not reaped), it's an put
                 eventListener.sendMessage(EventMessage.put(newStatsEntry(key, newValue)));
             }
@@ -348,79 +363,20 @@ public class CacheImpl implements Cache {
         return ResponseStatus.StoreStatus.STORED;
     }
 
-    /**
-     * Normalizes ttl per memcache protocol.
-     * Values less than number of seconds in 30 days are treated as absolute.
-     *
-     * @param ttl
-     * @param currTime
-     * @return
-     */
-    private long normalizeTtl(long ttl, long currTime) {
-        if (ttl > SECS_IN_30_DAYS) {
-            return ttl;
-        }
-        if (ttl == 0) {
-            return 0;
-        }
-
-        return currTime + ttl;
+    protected long getCurrTime() {
+        return getCurrTime(0);
     }
 
-    /**
-     * Helper to create a new cache value
-     *
-     * @param value
-     * @param ttl
-     * @param flag flag from request, per memcache protocol
-     * @return
-     */
-    private CacheValue newCacheValue(byte[] value, long ttl, long flag) {
-        long createdAt = getCurrTime();
-        long casUnique = casCounter.incrementAndGet();
-        long nTtl = normalizeTtl(ttl, createdAt);
-        return new CacheValue(value, flag, createdAt, nTtl, casUnique);
+    protected long getCurrTime(long delta) {
+        long t = relTime > 0 ? relTime : CacheUtil.getCurrTime();
+        return t + delta;
     }
 
-    /**
-     * Heler to get current time in epoch seconds
-     *
-     * @return
-     */
-    private long getCurrTime() {
-        return System.currentTimeMillis() / 1000;
+    protected boolean isExpired(CacheValue v) {
+        return CacheUtil.isExpired(v);
     }
 
-    /**
-     * Helper to determine if an cache value is expired
-     *
-     * @param value
-     * @return
-     */
-    private boolean isExpired(CacheValue value) {
-        return isExpired(value, getCurrTime());
-    }
-
-    /**
-     * Helper to determine if an cache value is expired
-     *
-     * @param value
-     * @param currTime the time relative to the expiration
-     * @return
-     */
-    private boolean isExpired(CacheValue value, long currTime) {
-        return value.getExpiresAt() < currTime;
-    }
-
-    /**
-     * Converts a cache entry with a payload into a cache entry with stats only,
-     * for when no payload is necessary, like for listeners
-     *
-     * @param key
-     * @param value
-     * @return
-     */
-    private CacheEntry<CacheValueStats> newStatsEntry(String key, CacheValue value) {
-        return new CacheEntry<>(key, value.getStats());
+    protected boolean isExpired(CacheValue v, long currTime) {
+        return CacheUtil.isExpired(v, currTime);
     }
 }

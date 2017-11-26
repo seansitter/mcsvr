@@ -1,5 +1,7 @@
 package net.seansitter.mcsvr.cache;
 
+import java.util.Arrays;
+
 /**
  * Represents a value in the cache
  */
@@ -42,5 +44,31 @@ public class CacheValue {
 
     public CacheValueStats getStats() {
         return stats;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (!(o instanceof CacheValue)) {
+            return false;
+        }
+
+        CacheValue v = (CacheValue)o;
+        if (v.flag != flag) {
+            return false;
+        }
+        if (payload != null && v.payload == null) {
+            return false;
+        }
+        if (payload != null && !Arrays.equals(v.payload, payload)) {
+            return false;
+        }
+        if (stats != null && v.stats == null) {
+            return false;
+        }
+        if (stats != null && !stats.equals(v.stats)) {
+            return false;
+        }
+
+        return true;
     }
 }

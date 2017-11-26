@@ -49,4 +49,27 @@ public class EventMessage {
         List<CacheEntry<CacheValueStats>> e = Arrays.asList(cacheEntryList);
         return new EventMessage(Event.DESTROY_ENTRIES, new DestroyEntriesMessage(e, sz));
     }
+
+    @Override
+    public boolean equals(Object o) {
+        if (!(o instanceof EventMessage)) {
+            return false;
+        }
+
+        EventMessage om = (EventMessage)o;
+        if (event == null && om.event != null) {
+            return false;
+        }
+        if (event != null && !event.equals(om.event)) {
+            return false;
+        }
+        if (data == null && om.data != null) {
+            return false;
+        }
+        if (data != null && !data.equals(om.data)) {
+            return false;
+        }
+
+        return true;
+    }
 }
