@@ -26,7 +26,6 @@ public class CommandHandler extends SimpleChannelInboundHandler<ApiCommand> {
         //
         // For the purposes of this exercise, the executor provides a nice interface + built in queueing.
         this.executorService = executorService;
-
         this.commandExecutor = commandExecutor;
     }
 

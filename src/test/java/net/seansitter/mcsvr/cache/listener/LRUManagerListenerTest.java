@@ -28,11 +28,11 @@ public class LRUManagerListenerTest {
         managerListener = new LRUManagerListener(mockCache, blockingQueue, 35, 30);
         lruManager = spy(managerListener.getLruManager());
         managerListener.setLruManager(lruManager);
-        managerListener.lazyStartConsumer();
     }
 
     @Test
     public void testManagerSentMessage() throws InterruptedException {
+        managerListener.lazyStartConsumer();
         EventMessage m = EventMessage.cacheMiss(DEFAULT_KEY);
         managerListener.sendMessage(m);
         verify(blockingQueue).offer(m); // verify it was published to consumer

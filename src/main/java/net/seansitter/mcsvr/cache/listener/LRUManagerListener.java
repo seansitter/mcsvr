@@ -109,10 +109,6 @@ public class LRUManagerListener implements CacheEventListener {
             }, "lru-manager-thread").start();
         }
 
-        private long lruRecoverSz() {
-            return (long)Math.floor(maxSz * ((float)lruRecoverPct/100));
-        }
-
         @Override
         public void sendMessage(EventMessage message) {
             if (message.event == Event.PUT_ENTRY) {
@@ -206,7 +202,7 @@ public class LRUManagerListener implements CacheEventListener {
          */
         protected void cleanupLru() {
             // check size < max
-            if (currSz > maxSz) {
+            if (shouldCleanup()) {
                 long overSz = currSz - maxSz;
                 long recoverSz = lruRecoverSz();
                 logger.info("cache size is " + currSz + " bytes, over-size by " + overSz + " bytes, attempting to recover " +
@@ -296,6 +292,18 @@ public class LRUManagerListener implements CacheEventListener {
                 this.key = key;
                 this.cacheStats = cacheStats;
             }
+        }
+
+        protected boolean shouldCleanup() {
+            return currSz > maxSz;
+        }
+
+        protected float lruRecoveryFactor() {
+            return ((float)lruRecoverPct) / 100;
+        }
+
+        protected long lruRecoverSz() {
+            return (long)Math.floor(maxSz * lruRecoveryFactor());
         }
 
         /**
