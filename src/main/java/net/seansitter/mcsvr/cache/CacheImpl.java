@@ -307,7 +307,11 @@ public class CacheImpl implements Cache {
             if (null == newValue || isExpired(newValue, getCurrTime())) { // check expired since may not have been reaped
                 return ResponseStatus.StoreStatus.NOT_FOUND;
             }
-            else if (newValue.getCasUnique() == casUnique) {
+            else if (newValue.getCasUnique() != casUnique) {
+                // key exists and casUnique doesn't match
+                return ResponseStatus.StoreStatus.EXISTS;
+            }
+            else  {
                 newValue = newCacheValue(value, ttl, flag, casCounter.incrementAndGet());
                 CacheValue oldValue = cache.put(key, newValue);
 
@@ -317,10 +321,7 @@ public class CacheImpl implements Cache {
 
                 return ResponseStatus.StoreStatus.STORED;
             }
-            else {
-                // key exists and casUnique doesn't match
-                return ResponseStatus.StoreStatus.EXISTS;
-            }
+
         }
         finally {
             lock.writeLock().unlock();

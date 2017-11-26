@@ -6,10 +6,7 @@ import net.seansitter.mcsvr.cache.listener.EventMessage;
 import org.junit.Before;
 import org.junit.Test;
 
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Optional;
+import java.util.*;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReadWriteLock;
@@ -21,7 +18,7 @@ import static org.junit.Assert.*;
 public class CacheImplTest {
     final String DEFKEY = "some_key";
     final String DEFVAL = "some_value";
-    final byte[] DEFVAL_B = valueOf(DEFVAL);
+    final byte[] DEFVAL_B = byteVal(DEFVAL);
     final long DEFFLAG = 15;
     final long DEFTTL = 0;
     final long DEFCASUNQ = 1;
@@ -70,10 +67,10 @@ public class CacheImplTest {
         assertEquals(t1, NOW);
     }
 
+    // TESTING BASIC FUNCTION
+
     @Test
     public void testSetGet() {
-        byte[] payload = valueOf(DEFKEY);
-
         cache.set(DEFKEY, DEFVAL_B, DEFTTL, DEFFLAG);
         Optional<CacheEntry<CacheValue>> res = cache.get(DEFKEY);
 
@@ -84,13 +81,104 @@ public class CacheImplTest {
         assertEquals(DEFCVAL, e.getValue());
     }
 
+    @Test
+    public void testCasOk() {
+
+    }
+
+    @Test
+    public void testCasMismatch() {
+
+    }
+
+    @Test
+    public void testCasExpired() {
+
+    }
+
+    @Test
+    public void testCasNotFound() {
+
+    }
+
+    @Test
+    public void testDelete() {
+        setDefaultValueInCache();
+        assertEquals(cache.deleteKey(DEFKEY), ResponseStatus.DeleteStatus.DELETED);
+    }
+
+    @Test
+    public void testDeleteMiss() {
+        assertEquals(cache.deleteKey(DEFKEY), ResponseStatus.DeleteStatus.NOT_FOUND);
+    }
+
+    @Test
+    public void testDeleteExpired() {
+        cache.set(DEFKEY, DEFVAL_B, 2, DEFFLAG);
+        cache.setRelTime(NOW + 3);
+        assertEquals(cache.deleteKey(DEFKEY), ResponseStatus.DeleteStatus.NOT_FOUND);
+    }
+
+    @Test
+    public void testSetReplace() {
+        setDefaultValueInCache();
+        cache.set(DEFKEY, byteVal("new_value"), DEFTTL + 5, 22);
+        Optional<CacheEntry<CacheValue>> v = cache.get(DEFKEY);
+        assertTrue(v.isPresent());
+        assertTrue(Arrays.equals(byteVal("new_value"), v.get().getValue().getPayload()));
+        assertEquals(NOW + 5, v.get().getValue().getExpiresAt());
+        assertEquals(22, v.get().getValue().getFlag());
+        assertEquals(DEFCASUNQ + 1, v.get().getValue().getCasUnique());
+    }
+
+    @Test
+    public void testGetExpiredRel() {
+        cache.set(DEFKEY, DEFVAL_B, 2, DEFFLAG);
+        cache.setRelTime(NOW+3);
+        assertFalse(cache.get(DEFKEY).isPresent());
+    }
+
+    @Test
+    public void testGetExpiredAbs() {
+        cache.set(DEFKEY, DEFVAL_B, NOW+2, DEFFLAG);
+        cache.setRelTime(NOW+3);
+        assertFalse(cache.get(DEFKEY).isPresent());
+    }
+
+    @Test
+    public void testDestroy() {
+        cache.set(DEFKEY, DEFVAL_B, 0, DEFFLAG);
+        cache.set(DEFKEY+"2", DEFVAL_B, 0, DEFFLAG);
+        cache.set(DEFKEY+"3", DEFVAL_B, 0, DEFFLAG);
+        List<CacheEntry<CacheValueStats>> e =
+                cache.destroyKeys(Arrays.asList(DEFKEY+"2",DEFKEY+"3"));
+        assertFalse("cache key no longer present", cache.get(DEFKEY+"2").isPresent());
+        assertFalse("cache key no longer present", cache.get(DEFKEY+"3").isPresent());
+        assertEquals("expect 2 deleted items", 2, e.size());
+    }
+
+    @Test
+    public void testGetMiss() {
+        assertFalse("missing entry gives empty optional",
+                cache.get("missing").isPresent());
+    }
+
+    @Test
+    public void testSetDeleteGet() {
+        cache.set(DEFKEY, DEFVAL_B, DEFTTL, DEFFLAG);
+        Optional<CacheEntry<CacheValue>> res = cache.get(DEFKEY);
+        cache.deleteKey(DEFKEY);
+        assertFalse("deleted entry gives empty optional",
+                cache.get("missing").isPresent());
+    }
+
      // TESTING LOCKS
 
     @Test
     public void testSetWriteLocks() {
         long ttl = getTime(15);
 
-        byte[] payload = valueOf(DEFKEY);
+        byte[] payload = byteVal(DEFKEY);
 
         cache.set(DEFKEY, payload, ttl, 15);
         verify(writeLock, times(1)).lock();
@@ -115,7 +203,7 @@ public class CacheImplTest {
 
     @Test
     public void testDelReadWriteLockKey() {
-        cache.set(DEFKEY, valueOf("whatever"), 0, 15);
+        cache.set(DEFKEY, byteVal("whatever"), 0, 15);
         verify(writeLock, times(1)).lock();
         verify(writeLock, times(1)).unlock();
         verify(readLock, never()).lock();
@@ -129,16 +217,57 @@ public class CacheImplTest {
     }
 
     @Test
-    public void testCasLocks() {
+    public void testCasNoWriteLocks() {
+        setDefaultValueInCache();
+        cache.set(DEFKEY, byteVal("second_value"), DEFTTL, DEFFLAG);
+        reset(readLock);
+        reset(writeLock);
 
+        // this should not be set because we have the original cas unique value
+        cache.cas(DEFKEY, byteVal("third_value"), DEFTTL, DEFCASUNQ, DEFFLAG);
+
+        verify(readLock, times(1)).lock();
+        verify(readLock, times(1)).unlock();
+        verifyNoMoreInteractions(writeLock);
     }
 
-    // TESTING EXPIRATION
+    @Test
+    public void testCasWriteLocks() {
+        setDefaultValueInCache();
+        reset(readLock);
+        reset(writeLock);
 
+        // this should not be set because we have the original cas unique value
+        cache.cas(DEFKEY, byteVal("third_value"), DEFTTL, DEFCASUNQ, DEFFLAG);
+
+        verify(readLock, times(1)).lock();
+        verify(readLock, times(1)).unlock();
+        verify(writeLock, times(1)).lock();
+        verify(writeLock, times(1)).unlock();
+    }
+
+    @Test
+    public void testDestroyWriteLock() {
+        setDefaultValueInCache();
+        reset(readLock);
+        reset(writeLock);
+
+        // this should not be set because we have the original cas unique value
+        cache.destroyKeys(Arrays.asList(DEFKEY));
+
+        verifyZeroInteractions(readLock);
+        verify(writeLock, times(1)).lock();
+        verify(writeLock, times(1)).unlock();
+    }
+
+    // TESTING REAPER
+
+
+    // TESTING EXPIRATION
     @Test
     public void testZeroExpiration() throws InterruptedException {
         cache.set(DEFKEY, DEFVAL_B, 0, 15);
-        Thread.sleep(2000);
+        cache.setRelTime(NOW+2);
         Optional<CacheEntry<CacheValue>> res = cache.get(DEFKEY);
         assertEquals("expiration is 0", 0, res.get().getValue().getExpiresAt());
         assertFalse("key is not expired", cache.isExpired(res.get().getValue()));
@@ -148,7 +277,7 @@ public class CacheImplTest {
     public void testNonZeroNotExpired() throws InterruptedException {
         long ttl = getTime(5);
         cache.set(DEFKEY, DEFVAL_B, ttl, 15);
-        Thread.sleep(2000);
+        cache.setRelTime(NOW+2);
         Optional<CacheEntry<CacheValue>> res = cache.get(DEFKEY);
         assertEquals("expiration is "+ttl, ttl, res.get().getValue().getExpiresAt());
         assertFalse("key is expired", cache.isExpired(res.get().getValue()));
@@ -158,7 +287,7 @@ public class CacheImplTest {
     public void testRelativeExpiration() throws InterruptedException {
         long ttl = getTime(5);
         cache.set(DEFKEY, DEFVAL_B, 5, 15);
-        Thread.sleep(2000);
+        cache.setRelTime(NOW+2);
         Optional<CacheEntry<CacheValue>> res = cache.get(DEFKEY);
         assertEquals("expiration is "+ttl, ttl, res.get().getValue().getExpiresAt());
         assertFalse("key is expired", cache.isExpired(res.get().getValue()));
@@ -166,18 +295,16 @@ public class CacheImplTest {
 
     @Test
     public void testRelativeRelExpirationExpired() throws InterruptedException {
-        cache.setRelTime(0);
         cache.set(DEFKEY, DEFVAL_B, 2, 15);
-        Thread.sleep(3000);
+        cache.setRelTime(NOW+3);
         Optional<CacheEntry<CacheValue>> res = cache.get(DEFKEY);
         assertFalse("expired item is not present", res.isPresent());
     }
 
     @Test
     public void testRelativeAbsExpirationExpired() throws InterruptedException {
-        cache.setRelTime(0);
         cache.set(DEFKEY, DEFVAL_B, getTime(2), 15);
-        Thread.sleep(3000);
+        cache.setRelTime(NOW+3);
         Optional<CacheEntry<CacheValue>> res = cache.get(DEFKEY);
         assertFalse("expired item is not present", res.isPresent());
     }
@@ -209,7 +336,7 @@ public class CacheImplTest {
         setDefaultValueInCache();
         reset(eventListener);
 
-        byte[] newPayload = valueOf("new value");
+        byte[] newPayload = byteVal("new value");
         CacheValue newValue = CacheUtil.newCacheValue(newPayload, DEFTTL, DEFFLAG, DEFCASUNQ);
         cache.set(DEFKEY, newPayload, DEFTTL, DEFFLAG);
 
@@ -219,7 +346,7 @@ public class CacheImplTest {
     }
 
     @Test
-    public void testSetUpdateNoChange() {
+    public void testSetUpdateNoChangeEventListener() {
         setDefaultValueInCache();
         reset(eventListener);
         setDefaultValueInCache();
@@ -239,12 +366,10 @@ public class CacheImplTest {
 
     @Test
     public void testDeleteExpiredEventListener() throws InterruptedException {
-        cache.setRelTime(0);
-
         String newKey = "other_key";
         long ttl = getTime() + 1;
         cache.set(newKey, DEFVAL_B, ttl, DEFFLAG);
-        Thread.sleep(2000);
+        cache.setRelTime(NOW+2);
 
         reset(eventListener);
         cache.deleteKey(newKey);
@@ -279,8 +404,8 @@ public class CacheImplTest {
         setDefaultValueInCache();
         CacheEntry<CacheValue> v = cache.get(DEFKEY).get();
         reset(eventListener);
-        CacheValue newValue = CacheUtil.newCacheValue(valueOf("new_value"), DEFTTL, DEFFLAG, DEFCASUNQ+1, NOW);
-        cache.cas(DEFKEY, valueOf("new_value"), DEFTTL, v.getValue().getCasUnique(), DEFFLAG);
+        CacheValue newValue = CacheUtil.newCacheValue(byteVal("new_value"), DEFTTL, DEFFLAG, DEFCASUNQ+1, NOW);
+        cache.cas(DEFKEY, byteVal("new_value"), DEFTTL, v.getValue().getCasUnique(), DEFFLAG);
 
         verify(eventListener, only()).sendMessage(
                 EventMessage.update(DEFCSTATENTRY, new CacheEntry<>(DEFKEY, newValue.getStats())));
@@ -289,12 +414,12 @@ public class CacheImplTest {
     @Test
     public void testCasNoUpdateEventListener() {
         setDefaultValueInCache();
-        cache.set(DEFKEY, valueOf("second_value"), DEFTTL, DEFFLAG);
+        cache.set(DEFKEY, byteVal("second_value"), DEFTTL, DEFFLAG);
         CacheEntry<CacheValue> v = cache.get(DEFKEY).get();
         reset(eventListener);
 
         // this should not be set because we have the original cas uniqu value
-        cache.cas(DEFKEY, valueOf("third_value"), DEFTTL, DEFCASUNQ, DEFFLAG);
+        cache.cas(DEFKEY, byteVal("third_value"), DEFTTL, DEFCASUNQ, DEFFLAG);
 
         verifyNoMoreInteractions(eventListener);
     }
@@ -310,7 +435,7 @@ public class CacheImplTest {
         cache.set(DEFKEY, DEFVAL_B, DEFTTL, DEFFLAG);
     }
 
-    byte[] valueOf(String s) {
+    byte[] byteVal(String s) {
         return s.getBytes(CharsetUtil.UTF_8);
     }
 
