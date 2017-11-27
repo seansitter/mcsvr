@@ -1,4 +1,4 @@
-# Slack homework by Sean Sitter
+# Memcache implementation by Sean Sitter
 Thank you for taking the time to review my homework exercise. 
 
 Per the homework requirements, I have implemented a memcache server supporting the text protocol
