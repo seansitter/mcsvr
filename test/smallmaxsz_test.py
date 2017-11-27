@@ -33,6 +33,18 @@ class SmallMaxSzServerConfigTests(unittest.TestCase):
         time.sleep(1)
         os.kill(int(self.server_pid), signal.SIGTERM)
 
+    def testNoEvict(self):
+        self.client.set('first_key', '121212121212', 0, False) # 12 bytes
+        self.client.set('second_key', '88888888', 0, False) # 8 bytes
+        self.client.set('third_key', '999999999', 0, False) # 9 bytes
+        time.sleep(.5) # the lru is asynchronous
+        res = self.client.get('first_key')
+        self.assertEqual('121212121212', res)
+        res = self.client.get('second_key')
+        self.assertEqual('88888888', res)
+        res = self.client.get('third_key')
+        self.assertEqual('999999999', res)
+
     def testEvict1(self):
         self.client.set('first_key', '121212121212', 0, False) # 12 bytes
         self.client.set('second_key', '88888888', 0, False) # 8 bytes
