@@ -81,10 +81,11 @@ public class McTextDecoder extends ByteToMessageDecoder {
         int byteLen = ((Integer)cmdLineObjs[4]).intValue();
         if (in.isReadable() && (in.readableBytes() >= byteLen + 2)) {
             byte[] payload = new byte[byteLen];
-            in.readBytes(byteLen).getBytes(0, payload);
+            // TODO - this is causing a memory leak
+            in.readSlice(byteLen).getBytes(0, payload);
             ApiCommand cmd = cmdLineObjsToCmd(cmdLineObjs, payload);
 
-            in.readBytes(2); // advance past \r\n
+            in.readSlice(2); // advance past \r\n
             reset();
             return cmd;
         }
@@ -116,8 +117,8 @@ public class McTextDecoder extends ByteToMessageDecoder {
         }
 
         // don't include the cr-lf
-        String cmdLine = in.readBytes((endLnIdx-1)-rIdx).toString(Charset.forName("utf-8"));
-        in.readBytes(2);
+        String cmdLine = in.readSlice((endLnIdx-1)-rIdx).toString(Charset.forName("utf-8"));
+        in.readSlice(2);
 
         String[] cmdParts = cmdLine.split(" ");
         if (cmdParts.length < 2) {
