@@ -122,6 +122,8 @@ public class CacheImpl implements Cache {
      */
     @Override
     public ResponseStatus.DeleteStatus deleteKey(String key) {
+        logger.debug("got delete request for key: "+key);
+
         // pre-empt taking a read lock
         if (null == key) {
             return ResponseStatus.DeleteStatus.NOT_FOUND;
@@ -164,6 +166,8 @@ public class CacheImpl implements Cache {
      */
     @Override
     public List<CacheEntry<CacheValueStats>> destroyKeys(List<String> keys) {
+        logger.debug("got destroy request for keys: "+keys.toString());
+
         // pre-empt taking a write lock
         if (null == keys || keys.isEmpty()) {
             // return empty list
@@ -232,6 +236,7 @@ public class CacheImpl implements Cache {
      */
     @Override
     public Optional<CacheEntry<CacheValue>> get(String key) {
+        logger.debug("got get request for keys: "+key.toString());
         return get(key, getCurrTime());
     }
 
@@ -278,6 +283,7 @@ public class CacheImpl implements Cache {
      */
     @Override
     public ResponseStatus.StoreStatus cas(String key, byte[] value, long ttl, long casUnique, long flag) {
+        logger.debug("got cas request for keys: "+key);
         // pre-empt taking a read lock
         if (null == key) {
             return ResponseStatus.StoreStatus.NOT_FOUND;
@@ -341,6 +347,8 @@ public class CacheImpl implements Cache {
      */
     @Override
     public ResponseStatus.StoreStatus set(String key, byte[] value, long ttl, long flag) {
+        logger.debug("got get request for keys: "+key);
+
         // pre-empt attempting to store expired ttl
         // note we can't do this in cas because we need the actual state for the response
         long time = getCurrTime();
