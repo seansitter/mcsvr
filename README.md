@@ -13,7 +13,7 @@ $> ./gradlew buildSvr
 ```
 The server binary will be copied into the bin/ directory as 'mcsvr'.
 
-## Run
+## Running
 To run the server first build the project and then execute:
 ```shell
 $> java -jar bin/mcsvr
@@ -47,12 +47,12 @@ performance penalty as the entire cache is write-locked during a sweep.
 connection after a number of seconds without a write. This may help load-shedding on a busy 
 server
 
-## Test
+## Testing
 The project features unit tests and functional tests.
 #### Unit Tests
 The project includes unit tests and functional tests. Strategy for unit tests was to 
 test all critical classes. Simple POJOS and other data transfer classes may not have coverage. 
-In a production project they *should*.
+In a production project they *should* have coverage.
 
 To run the unit tests:
 ```shell
@@ -81,3 +81,65 @@ $> ./test/stdsvrcfg_test.py
 ```
 
 ## Architecture and Design
+#### Networking
+The networking frontend implemented as a netty pipeline. Netty is a networking framework which simplifies 
+creation of asynchronous non-blocking IO. Asynchronous non-blocking IO is event based, with a limited 
+number of threads that execute an event loop and dispatch data as it becomes available. Contrasted with
+the thread per connection synchronous blocking model, the non-blocking model can typically handle a much 
+larger number of clients and handle them more efficiently. 
+
+The pipeline is configured in the McServer class. Handlers live in the 'handler' package.
+Key pipeline handlers include:
+* IdleStateHandler : handles server and client timeouts
+* McTextDecoder : decodes memcache text protocol requests
+* McTextEncoder : encodes memcache text protocol responses
+* CommandHandler : accepts an inbound command from the decoder and calls ApiCacheCommandExecutor 
+to dispatch it to the backing cache.
+* InboundErrorHandler : handles exceptions and errors
+
+#### Command Ordering
+It is important that commands issued on a single client connection are totally ordered. 
+
+The server does not otherwise guarantee the order of commands issued on separate commands. Though 
+generally write commands are executed in arrival order relative to each other, their order is not 
+guaranteed relative to read commands issued by different connection.
+
+To satisfy the requirement of per-connection command ordering, and to ensure the netty IO thread is 
+not blocked, the CommandHandler executes its commands in a dedicated thread. Currently this happens 
+in a new per-request ExecutorService for simplicity. In a production system I would consider a thread pooled 
+implementation.
+
+#### Backing Cache
+The backing cache can be found in the CacheImpl class. The cache uses a ReadWriteLock to protect a HashMap. 
+Where possible, a read lock is used to check pre-conditions prior to entering an expensive write lock. The
+CAS unique value is implemented as an AtomicLong.
+
+#### Cache Event Listeners
+The backing cache uses a listener architecture to broadcast cache events (hit, miss, put, update, delete, destroy).
+The LRU and metrics managers are implemented as cache event listeners. This helps keep the backing cache design
+simple and focused on managing the cache itself. In the case of the LRU manager, it also ensures the backing
+cache does not need to take out a writelock on reads to update the LRU list.
+
+#### LRU Manager
+The LRU manager listener is implemented in the LRUManagerListener class. This class communicates vi a blocking 
+queue to a consumer thread. Executing all LRU transformations on a single thread means we don't need to synchronize
+on the LRU data structures, which improves performance. The producer is non-blocking, so that even publishing 
+is not blocked from the point of view of the event call coming from the cache. 
+
+The LRU is implemented as a doubly-linked list, where the head is the most recently used item. In order to keep
+node lookup O(1), a hash is maintained to point cache keys to list nodes. It was necessary to implement the list 
+because the native java list implementations don't provide access to the nodes themselves, only the values in the 
+nodes.
+
+The LRU manager maintains the current cache size. When the size exceeds the max configured size, the LRU seeks
+to recover a configurable percent of the size by searching backward for the tail for the set of keys whose value
+sizes are at least equal to the size to recover. The key list is then sent as destroy advice to the backing cache.
+When the backing cache deletes the nodes, the LRU manager will be notified via cache events and it will update
+its data structures and size account accordingly.
+
+#### Reaper
+
+#### Monitoring / JMX
+
+
+ 
