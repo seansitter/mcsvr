@@ -8,18 +8,18 @@ commands: get, gets, set, cas, and delete.
 The project uses the gradle build system. 
 
 To build the server binary:
-```
+```shell
 $> ./gradlew buildSvr
 ```
 The server binary will be copied into the bin/ directory as 'mcsvr'.
 
 ## Run
 To run the server first build the project and then execute:
-```
+```shell
 $> java -jar bin/mcsvr
 ```
 The binary accepts a handful of options, to list them execute:
-```
+```shell
 $> java -jar bin/mcsvr.jar -help
 usage: mcsvr
  -help                  show help message
@@ -48,5 +48,36 @@ connection after a number of seconds without a write. This may help load-sheddin
 server
 
 ## Test
+The project features unit tests and functional tests.
+#### Unit Tests
+The project includes unit tests and functional tests. Strategy for unit tests was to 
+test all critical classes. Simple POJOS and other data transfer classes may not have coverage. 
+In a production project they *should*.
+
+To run the unit tests:
+```shell
+$> ./gradlew test
+```
+
+#### Functional Tests
+The functional tests are driven by python scripts in the test/ directory. 
+```shell
+$> ls test/
+smallmaxsz_test.py	stdsvrcfg_test.py
+```
+These scripts run/kill a real server for each test case, and run live commands against it with 
+a python client. The different scripts have different configurations of the server. 
+* smallmaxsz_test.py : configures a server with a small maxCacheBytes for testing the lru
+* stdsvrcfg_test.py : standard configuration of the server for testing basic operations.
+
+These tests are executable. The scripts require the pymemcache python library.
+```shell
+$> pip install pymemcache
+```
+
+To execute a test client, first make sure no server is already running, then ex:
+```shell
+$> ./test/stdsvrcfg_test.py
+```
 
 ## Architecture and Design
