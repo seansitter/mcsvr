@@ -11,14 +11,39 @@ repositories {
 
 task fatJar(type: Jar) {
     manifest {
-        attributes 'Implementation-Title': 'Gradle Jar File Example',
-                'Implementation-Version': version,
+        attributes(
                 'Main-Class': 'net.seansitter.mcsvr.McMain'
+        )
     }
     baseName = project.name + '-all'
     from { configurations.compile.collect { it.isDirectory() ? it : zipTree(it) } }
     with jar
+
+    project.ext.archivePath =  archivePath
+    project.ext.archiveName =  archiveName
+    project.ext.binDir = "bin"
+    project.ext.binPath = "${project.ext.binDir}/mcsvr.jar"
 }
+
+task buildSvr() {
+    dependsOn fatJar
+
+    doLast {
+        copy {
+            from project.ext.archivePath
+            into project.ext.binDir
+        }
+        file("${project.ext.binDir}/${project.ext.archiveName}").renameTo(file(project.ext.binPath))
+    }
+}
+
+clean {
+    doLast {
+        delete project.ext.binPath
+    }
+}
+
+assemble.dependsOn fatJar
 
 dependencies {
     compile 'io.netty:netty-all:4.1.17.Final'

@@ -3,6 +3,8 @@ out/**
 .DS_Store
 .idea/
 *.iml
+*.pyc
 .gradle
 build/
 .gradle
+bin/

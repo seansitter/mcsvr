@@ -19,6 +19,8 @@ import org.apache.commons.cli.DefaultParser;
 import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
 import org.apache.commons.cli.CommandLine;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -30,11 +32,13 @@ import java.util.concurrent.locks.ReentrantReadWriteLock;
  * This class configures the dependency injection for the project
  */
 public class McServerConfig extends AbstractModule {
+    Logger logger = LoggerFactory.getLogger(McServerConfig.class);
+
     private final String[] args;
 
     private static final int DEFAULT_REAP_INTERVAL_S = 30;
     private static final int DEFAULT_SERVER_PORT = 11211;
-    private static final int DEFAULT_MAX_CACHE_BYTES = 0;
+    private static final int DEFAULT_MAX_CACHE_BYTES = Integer.MAX_VALUE;
     private static final int DEFAULT_CLIENT_TO = 0;
     private static final int DEFAULT_SERVER_TO = 0;
     private static final int DEFAULT_LRU_RECOVER_PCT = 20;
@@ -162,8 +166,10 @@ public class McServerConfig extends AbstractModule {
     @Provides
     @Named("maxCacheBytes")
     Integer provideMaxCacheBytes(CommandLine cmdLine) {
-        return cmdLine.hasOption("maxCacheBytes") ?
+        int mb = cmdLine.hasOption("maxCacheBytes") ?
                 Integer.parseInt(cmdLine.getOptionValue("maxCacheBytes")) : DEFAULT_MAX_CACHE_BYTES;
+        logger.info("cache has a max size of " + mb + " bytes");
+        return mb;
     }
 
     @Provides
@@ -182,8 +188,10 @@ public class McServerConfig extends AbstractModule {
 
     @Provides
     @Named("lruRecoverPct")
-    Integer provideLruRecoverPct(CommandLine cmdLine) {
-        return cmdLine.hasOption("lruRecoverPct") ?
+    Integer provideLruRecoverPct(CommandLine cmdLine, @Named("maxCacheBytes") int maxBytes) {
+        int rp = cmdLine.hasOption("lruRecoverPct") ?
                 Integer.parseInt(cmdLine.getOptionValue("lruRecoverPct")) : DEFAULT_LRU_RECOVER_PCT;
+        logger.info("lru will attempt to recover " + rp + "% when the cache exceeds " + maxBytes + " bytes");
+        return rp;
     }
 }
