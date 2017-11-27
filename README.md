@@ -81,6 +81,10 @@ $> ./test/stdsvrcfg_test.py
 ```
 
 ## Architecture and Design
+#### Dependency Injection / Guice
+The project uses Guice for dependency injection to isolate components for testing and reduce boilerplate code.
+The DI configuration is in the McServerConfig class.
+
 #### Networking
 The networking frontend implemented as a netty pipeline. Netty is a networking framework which simplifies 
 creation of asynchronous non-blocking IO. Asynchronous non-blocking IO is event based, with a limited 
@@ -120,6 +124,9 @@ The LRU and metrics managers are implemented as cache event listeners. This help
 simple and focused on managing the cache itself. In the case of the LRU manager, it also ensures the backing
 cache does not need to take out a writelock on reads to update the LRU list.
 
+The BroadcastCacheEventListener receives cache events and re-broadcasts them to a list of listeners. The broadcast
+listener is configured in McServerConfig.
+
 #### LRU Manager
 The LRU manager listener is implemented in the LRUManagerListener class. This class communicates vi a blocking 
 queue to a consumer thread. Executing all LRU transformations on a single thread means we don't need to synchronize
@@ -138,8 +145,16 @@ When the backing cache deletes the nodes, the LRU manager will be notified via c
 its data structures and size account accordingly.
 
 #### Reaper
+Expired cache items are left in the cache until they are cleared by a reaper thread. On retrieval requests, if the 
+item is found but it is expired, a cache miss is returned. The reaper runs on a separate thread withing the CacheImpl
+class. It is scheduled with a ScheduledExecutorService. Performance can be improved by using less frequent reaper sweeps
+as this causes a write lock while each cache item is visited. The cost of less frequent sweeps is more items in the cache.
+The reaper frequency can be configured with the reapInterval commandline argument.
 
 #### Monitoring / JMX
+Metrics are collected by the metrics collection listener CacheMetricsListener. This class uses atomics types
+vs synchronized blocks for better performance as it is not concerned with perfectly maintaining the invariants
+between metrics values.
 
-
- 
+The listener metrics are exposed via JMX. This presents an opportunity to visually inspect realtime metrics, and also
+for monitoring. For example, there exists a prometheus exporter for JMX.
