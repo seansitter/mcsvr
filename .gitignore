@@ -5,4 +5,3 @@ out/**
 *.iml
 .gradle
 build/
-test/
