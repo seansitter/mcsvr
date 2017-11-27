@@ -8,3 +8,4 @@ out/**
 build/
 .gradle
 bin/
+*.log
