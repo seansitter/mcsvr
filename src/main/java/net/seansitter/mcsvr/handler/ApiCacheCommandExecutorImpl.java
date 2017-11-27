@@ -9,6 +9,10 @@ import net.seansitter.mcsvr.domain.result.*;
 
 import javax.inject.Inject;
 
+/**
+ * This class dispatches a command to a method call in the cache. It is used
+ * in a handler at the end of the pipeline
+ */
 public class ApiCacheCommandExecutorImpl implements ApiCacheCommandExecutor {
     private final Cache cache;
 

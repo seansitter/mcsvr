@@ -10,6 +10,7 @@ import signal
 class StandardServerConfigTests(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
+        print "PLEASE MAKE SURE THE SERVER IS NOT ALREADY RUNNING!"
         print "Note: this test run will start and stop the server for each test case, this may take a minute or two...\n"
 
     def setUp(self):

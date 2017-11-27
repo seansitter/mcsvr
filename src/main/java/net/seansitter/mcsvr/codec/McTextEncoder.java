@@ -19,6 +19,7 @@ public class McTextEncoder extends MessageToByteEncoder<CacheResult> {
     @Override
     protected void encode(ChannelHandlerContext ctx, CacheResult msg, ByteBuf out) throws Exception {
         doEncode(msg, out);
+        ctx.flush();
     }
 
     protected void doEncode(CacheResult msg, ByteBuf out) {
