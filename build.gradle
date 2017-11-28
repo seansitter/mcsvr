@@ -37,11 +37,12 @@ task buildSvr() {
     }
 }
 
-clean {
+task cleanSvr() {
     doLast {
-        delete project.ext.binPath
+        delete project.ext.binDir
     }
 }
+clean.dependsOn cleanSvr
 
 assemble.dependsOn fatJar
 
