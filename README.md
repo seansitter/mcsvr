@@ -158,3 +158,6 @@ between metrics values.
 
 The listener metrics are exposed via JMX. This presents an opportunity to visually inspect realtime metrics, and also
 for monitoring. For example, there exists a prometheus exporter for JMX.
+
+#### Logging
+The application uses slf4j and logback. The default loglevel is debug. This can be changes in src/main/resources/logback.xml.
