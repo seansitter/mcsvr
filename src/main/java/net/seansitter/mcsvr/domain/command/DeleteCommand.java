@@ -28,6 +28,11 @@ public class DeleteCommand implements ApiCommand {
         return isNoReply;
     }
 
+    @Override
+    public String toString() {
+        return name+" "+key;
+    }
+
     public static Builder newBuilder() {
         return new Builder();
     }

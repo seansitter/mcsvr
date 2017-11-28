@@ -17,4 +17,9 @@ public class StoreCacheResult implements StatusCacheResult {
     public String getStatusString() {
         return status.toString();
     }
+
+    @Override
+    public String toString() {
+        return "set/cas: "+status.toString();
+    }
 }

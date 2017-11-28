@@ -44,6 +44,7 @@ public class ResponseStatus {
             this.status = status;
         }
 
+        @Override
         public String toString() {
             return status;
         }
@@ -62,6 +63,7 @@ public class ResponseStatus {
             this.status = status;
         }
 
+        @Override
         public String toString() {
             return status;
         }

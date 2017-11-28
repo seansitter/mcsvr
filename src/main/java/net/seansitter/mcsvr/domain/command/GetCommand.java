@@ -30,6 +30,11 @@ public class GetCommand implements ApiCommand {
         return false;
     }
 
+    @Override
+    public String toString() {
+        return name+" "+String.join(" ", keys);
+    }
+
     public static Builder newBuilder() {
         return new Builder();
     }

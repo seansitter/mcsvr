@@ -42,7 +42,6 @@ public class LRUManagerListener implements CacheEventListener {
             // we couldn't add an item to the queue, it must be full!
             logger.error("failed to send message to LRU consumer - full queue?");
         }
-        logger.debug("got here");
     }
 
     // for testing

@@ -58,6 +58,22 @@ public class StoreCommand implements ApiCommand {
         return isNoReply;
     }
 
+    @Override
+    public String toString() {
+        StringBuilder sb = new StringBuilder();
+        sb.append(name);
+        sb.append(" "+flags);
+        sb.append(" "+expTime);
+        sb.append(" "+payloadLen);
+        if (name.equals("cas")) {
+            sb.append(" "+casUnique);
+        }
+        if (isNoReply) {
+            sb.append(" noreply");
+        }
+        return sb.toString();
+    }
+
     public static Builder newBuilder() {
         return new Builder();
     }

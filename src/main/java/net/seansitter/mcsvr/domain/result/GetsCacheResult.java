@@ -14,4 +14,9 @@ public class GetsCacheResult extends GetCacheResult {
     public GetsCacheResult(Optional<CacheEntry> entry) {
         super(entry);
     }
+
+    @Override
+    public String toString() {
+        return "gets"+toStringBase();
+    }
 }

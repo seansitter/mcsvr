@@ -6,6 +6,8 @@ import net.seansitter.mcsvr.domain.command.DeleteCommand;
 import net.seansitter.mcsvr.domain.command.GetCommand;
 import net.seansitter.mcsvr.domain.command.StoreCommand;
 import net.seansitter.mcsvr.domain.result.*;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import javax.inject.Inject;
 
@@ -14,6 +16,8 @@ import javax.inject.Inject;
  * in a handler at the end of the pipeline
  */
 public class ApiCacheCommandExecutorImpl implements ApiCacheCommandExecutor {
+    Logger logger = LoggerFactory.getLogger(ApiCacheCommandExecutorImpl.class);
+
     private final Cache cache;
 
     @Inject
@@ -23,22 +27,30 @@ public class ApiCacheCommandExecutorImpl implements ApiCacheCommandExecutor {
 
     @Override
     public CacheResult execute(ApiCommand command) {
+        logger.debug("executing command: "+command);
+
+        CacheResult result = null;
         if (command.getName().equals("gets")) {
-            return executeGetsCommand((GetCommand)command);
+            result = executeGetsCommand((GetCommand)command);
         }
         else if (command.getName().equals("get")) {
-            return executeGetCommand((GetCommand)command);
+            result = executeGetCommand((GetCommand)command);
         }
         else if (command.getName().equals("set")) {
-            return executeSetCommand((StoreCommand)command);
+            result = executeSetCommand((StoreCommand)command);
         }
         else if (command.getName().equals("delete")) {
-            return executeDeleteCommand((DeleteCommand)command);
+            result = executeDeleteCommand((DeleteCommand)command);
         }
         else if (command.getName().equals("cas")) {
-            return executeCasCommand((StoreCommand)command);
+            result = executeCasCommand((StoreCommand)command);
         }
-        return null;
+
+        if (null != result) {
+            logger.debug("got result: "+result);
+        }
+
+        return result;
     }
 
     private CacheResult executeGetsCommand(GetCommand c) {

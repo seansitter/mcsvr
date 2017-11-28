@@ -4,11 +4,14 @@ import io.netty.buffer.ByteBuf;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.handler.codec.ByteToMessageDecoder;
 import io.netty.handler.codec.DecoderException;
+import net.seansitter.mcsvr.McServer;
 import net.seansitter.mcsvr.domain.command.ApiCommand;
 import net.seansitter.mcsvr.domain.command.DeleteCommand;
 import net.seansitter.mcsvr.domain.command.GetCommand;
 import net.seansitter.mcsvr.domain.command.StoreCommand;
 import net.seansitter.mcsvr.exception.InvalidCommandException;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import javax.inject.Inject;
 import java.nio.charset.Charset;
@@ -28,6 +31,8 @@ import java.util.List;
  * delete <key> [noreply]\r\n
  */
 public class McTextDecoder extends ByteToMessageDecoder {
+    private final Logger logger = LoggerFactory.getLogger(McTextDecoder.class);
+
     private Object[] cmdLineObjs = null;
     private final McCodecUtil codecUtil;
 

@@ -17,4 +17,9 @@ public class DeleteCacheResult implements StatusCacheResult {
     public String getStatusString() {
         return status.toString();
     }
+
+    @Override
+    public String toString() {
+        return "delete: "+status.toString();
+    }
 }
