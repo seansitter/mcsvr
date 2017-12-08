@@ -1,5 +1,5 @@
 # Memcache implementation by Sean Sitter
-Thank you for taking the time to review my homework exercise. 
+Thank you for taking the time to review my Slack homework exercise!
 
 Per the homework requirements, I have implemented a memcache server supporting the text protocol
 commands: get, gets, set, cas, and delete.
